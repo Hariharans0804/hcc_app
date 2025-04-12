@@ -85,7 +85,7 @@ cd > android                                 step - 1
 <!-- APK gradlew clean -->
 android > gradlew clean                      step - 2
 
-
+<!-- After this command, this command -->
 
 <!-- APK gradlew assembleRelease -->
 android > gradlew assembleRelease            step - 3
