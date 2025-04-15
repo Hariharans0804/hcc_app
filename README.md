@@ -80,6 +80,13 @@ To learn more about React Native, take a look at the following resources:
 
 <!-- ======================================================= -->
 
+npx react-native doctor
+
+npx react-native run-android
+
+npx react-native start
+
+
 cd > android                                 step - 1
 
 <!-- APK gradlew clean -->
@@ -91,3 +98,33 @@ android > gradlew clean                      step - 2
 android > gradlew assembleRelease            step - 3
 
 <!-- ======================================================= -->
+
+
+
+🛠 What taskkill Does
+taskkill is a Windows command used to terminate (kill) a process running on your system — like if it's stuck or you need to stop it manually.
+
+We use it when something (like Metro bundler) is already using a port and we want to free that port.
+
+✅ Step-by-Step Example to Kill Port 8081
+📍 Step 1: Find the Process Using Port 8081
+In Command Prompt (CMD), type:
+
+netstat -ano | findstr :8081
+
+Example output:
+
+TCP    127.0.0.1:8081     0.0.0.0:0     LISTENING     12345
+The last number (12345) is the PID (Process ID).
+
+📍 Step 2: Kill the Process with That PID
+Now run:
+
+taskkill /PID 12345 /F
+Replace 12345 with the number you got from above.
+
+The /F flag means “forcefully” kill it.
+
+✅ After that, port 8081 will be freed, and you can restart Metro:
+
+npx react-native start
