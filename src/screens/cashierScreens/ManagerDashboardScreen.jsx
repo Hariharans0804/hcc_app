@@ -35,6 +35,10 @@ const ManagerDashboardScreen = ({ navigation }) => {
     const [searchText, setSearchText] = useState("");
 
 
+    const today = new Date();
+    const currentDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
+
+
     const fetchGetLoginUserData = async () => {
         try {
             const data = await getFromStorage('users');
@@ -380,6 +384,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
             });
 
             setTodayRateModalVisiable(false);
+            setSearchText('');
 
             console.log('Response:', response.data);
         } catch (error) {
@@ -444,17 +449,67 @@ const ManagerDashboardScreen = ({ navigation }) => {
     //     return isMatchingSearch;
     // })
 
-    const searchAgentData = useMemo(() => {
-        const searchTextLower = searchText.toLowerCase();
-        return agentData.filter((item) =>
-            item.username?.toLowerCase().includes(searchTextLower) ||
-            item.phone_number?.toLowerCase().includes(searchText)
+    // const searchAgentData = useMemo(() => {
+    //     const searchTextLower = searchText.toLowerCase();
+    //     return agentData.filter((item) =>
+    //         item.username?.toLowerCase().includes(searchTextLower) ||
+    //         item.phone_number?.toLowerCase().includes(searchText)
+    //     );
+    // }, [searchText, agentData]); // Dependencies: only recalculate when these change
+
+
+
+    // const searchDistributorData = useMemo(() => {
+    //     if (!agentData || !Array.isArray(agentData)) return [];
+
+    //     const searchTextLower = searchText.toLowerCase().trim();
+
+    //     const filteredDistributors = agentData.filter(
+    //         item => item.role === "Distributor" && item.today_rate_date === currentDate
+    //     );
+
+    //     if (!searchTextLower) {
+    //         // If search is empty, return all distributors
+    //         return filteredDistributors;
+    //     }
+
+    //     const matched = agentData.filter(item =>
+    //         (item.username || "").toLowerCase().includes(searchTextLower) ||
+    //         (item.phone_number || "").toLowerCase().includes(searchTextLower)
+    //     );
+
+    //     return matched.length > 0 ? matched : filteredDistributors;
+
+    // }, [searchText, agentData, currentDate]);
+
+
+    const searchDistributorData = useMemo(() => {
+        if (!agentData || !Array.isArray(agentData)) return [];
+    
+        const searchTextLower = searchText.toLowerCase().trim();
+        const allDistributors = agentData.filter(item => item.role === "Distributor");
+    
+        if (!searchTextLower) {
+            // No search — show only today's updated distributors
+            return allDistributors.filter(item => item.today_rate_date === currentDate);
+        }
+    
+        // Search active — filter by username or phone number
+        return allDistributors.filter(item =>
+            (item.username || "").toLowerCase().includes(searchTextLower) ||
+            (item.phone_number || "").toLowerCase().includes(searchTextLower)
         );
-    }, [searchText, agentData]); // Dependencies: only recalculate when these change
+    }, [searchText, agentData, currentDate]);
+    
+
+
+
+
 
 
     useEffect(() => {
         setSearchText('');
+        fetchGetLoginUserData();
     }, []);
 
 
@@ -636,54 +691,68 @@ const ManagerDashboardScreen = ({ navigation }) => {
                             </View>
                         </View>
 
+                        {/* <View style={styles.whatsAppButtonContainer}>
+                            <Text style={styles.currentDateText}>Date : {currentDate}</Text>
+                        </View> */}
+
                         <View>
                             <View style={styles.header}>
                                 <Text style={[styles.tableHeading, { flex: 1 }]}>No</Text>
-                                <Text style={[styles.tableHeading, { flex: 3 }]}>Distributor Name</Text>
-                                <Text style={[styles.tableHeading, { flex: 2 }]}>Today Rate</Text>
+                                <Text style={[styles.tableHeading, { flex: 3 }]}>Distributor</Text>
+                                <Text style={[styles.tableHeading, { flex: 2 }]}>Rate</Text>
+                                <Text style={[styles.tableHeading, { flex: 1.5 }]}>Action</Text>
                             </View>
 
-                            {/* {loading ? (
-                            <ActivityIndicator
-                                size='large'
-                                color={Colors.DEFAULT_DARK_BLUE}
-                                style={{ marginTop: 20, }}
-                            />
-                        ) : ( */}
-                            {searchAgentData
-                                .filter(item => item.role === "Distributor")
-                                .map((item, index) => (
-                                    <View key={item.user_id?.toString()} style={styles.row}>
-                                        <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>
-                                        <Text style={[styles.cell, { flex: 3 }]}>
-                                            {item.username}
-                                            {"\n"}
-                                            <Text style={styles.cityText}>{item.phone_number}</Text>
-                                        </Text>
-                                        <View style={[styles.buttonContainer, { flex: 2 }]}>
-                                            <TouchableOpacity
-                                                style={styles.rateButton}
-                                                activeOpacity={0.8}
-                                                // onPress={() => setTodayRateModalVisiable(true)}
-                                                onPress={() => handleClickDistributor(item)}
-                                            >
-                                                <Text
-                                                    style={[
-                                                        styles.cell,
-                                                        {
-                                                            fontSize: 13,
-                                                            lineHeight: 13 * 1.4,
-                                                            textTransform: "uppercase",
-                                                            color: Colors.DEFAULT_LIGHT_WHITE,
-                                                        },
-                                                    ]}
+                            {searchDistributorData.length === 0 ? (
+                                <View style={{ padding: 15 }}>
+                                    <Text style={styles.emptyText}>
+                                        {searchText
+                                            ? `No distributor found matching "${searchText}"!`
+                                            : `${currentDate} No amount update for any distributor today!`
+                                        }
+                                    </Text>
+                                </View>
+                            ) : (
+                                searchDistributorData
+                                    // .filter(item => item.role === "Distributor" && item.today_rate_date === currentDate)
+                                    .map((item, index) => (
+                                        <View key={item.user_id?.toString()} style={styles.row}>
+                                            <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>
+                                            <Text style={[styles.cell, { flex: 3 }]}>
+                                                {item.username}
+                                                {"\n"}
+                                                <Text style={styles.cityText}>{item.phone_number}</Text>
+                                            </Text>
+                                            <Text style={[styles.cell, { flex: 2 }]}>
+                                                {item.today_rate_date === currentDate ? item.Distributor_today_rate : '0'}
+                                                {"\n"}
+                                                <Text style={styles.cityText}>{item.today_rate_date === currentDate ? item.today_rate_date : ''}</Text>
+                                            </Text>
+                                            <View style={[styles.buttonContainer, { flex: 1.5 }]}>
+                                                <TouchableOpacity
+                                                    style={styles.rateButton}
+                                                    activeOpacity={0.8}
+                                                    // onPress={() => setTodayRateModalVisiable(true)}
+                                                    onPress={() => handleClickDistributor(item)}
                                                 >
-                                                    Today Rate
-                                                </Text>
-                                            </TouchableOpacity>
+                                                    <Text
+                                                        style={[
+                                                            styles.cell,
+                                                            {
+                                                                fontSize: 13,
+                                                                lineHeight: 13 * 1.4,
+                                                                textTransform: "uppercase",
+                                                                color: Colors.DEFAULT_LIGHT_WHITE,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        Rate
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
                                         </View>
-                                    </View>
-                                ))}
+                                    ))
+                            )}
                         </View>
                     </>
                 )}
@@ -867,15 +936,15 @@ const styles = StyleSheet.create({
     },
     cityText: {
         fontFamily: Fonts.POPPINS_MEDIUM,
-        fontSize: 13,
-        lineHeight: 13 * 1.4,
+        fontSize: 12,
+        lineHeight: 12 * 1.4,
         color: '#8898A9'
     },
     rateButton: {
         // flexDirection: 'row',
         // alignItems: 'center',
         backgroundColor: Colors.DEFAULT_GREEN,
-        padding: 10,
+        paddingVertical: 10,
         // marginBottom: 8,
         // marginRight: 5,
         borderRadius: 25
@@ -1007,6 +1076,31 @@ const styles = StyleSheet.create({
         width: Display.setWidth(70),
         paddingRight: 15,
         // borderWidth: 1
+    },
+    emptyText: {
+        fontSize: 17,
+        lineHeight: 17 * 1.4,
+        textAlign: 'center',
+        fontFamily: Fonts.POPPINS_SEMI_BOLD,
+        marginVertical: 10,
+        color: Colors.DEFAULT_DARK_RED
+    },
+    whatsAppButtonContainer: {
+        // borderWidth: 1,
+        marginHorizontal: 15,
+        marginVertical: 15,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+    },
+    currentDateText: {
+        fontSize: 14,
+        lineHeight: 14 * 1.4,
+        color: Colors.DEFAULT_WHITE,
+        fontFamily: Fonts.POPPINS_SEMI_BOLD,
+        backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
+        padding: 10,
+        borderRadius: 8,
     },
 });
 
