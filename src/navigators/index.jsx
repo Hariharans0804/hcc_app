@@ -111,6 +111,11 @@ const Navigators = () => {
                     {/* Conditionally render this screen only for Collection Managers */}
                     {(role === 'Collection Manager' || role === 'Admin') && (
                         <>
+                            {/* <Stack.Screen
+                                name="ManagerDashboard"
+                                component={ManagerDashboardScreen}
+                                options={{ title: 'Manager Dashboard' }}
+                            /> */}
                             <Stack.Screen
                                 name="SingleManagerDetails"
                                 component={SingleManagerDetailsScreen}
@@ -120,13 +125,13 @@ const Navigators = () => {
                                 name="SingleEmployeeDetails"
                                 component={SingleEmployeeDetailsScreen}
                                 // options={{ title: 'Collection Lists' }}
-                                options={{headerShown:false}}
+                                options={{ headerShown: false }}
                             />
                             <Stack.Screen
                                 name='SingleClientDetails'
                                 component={SingleClientDetailsScreen}
                                 // options={{ title: 'Collection Details' }}
-                                options={{headerShown:false}}
+                                options={{ headerShown: false }}
                             />
                             <Stack.Screen
                                 name='SingleClientPaidCompletedList'
@@ -168,7 +173,7 @@ const Navigators = () => {
                                 component={SingleClientPaymentListScreen}
                                 options={{ title: 'Single Client Payment List', }}
                             />
-                             <Stack.Screen
+                            <Stack.Screen
                                 name='SingleEmployeeClientList'
                                 component={SingleEmployeeClientListScreen}
                                 options={{ title: 'Single Employee Client List', }}

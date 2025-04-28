@@ -92,6 +92,10 @@ cd > android                                 step - 1
 <!-- APK gradlew clean -->
 android > gradlew clean                      step - 2
 
+<!-- If you get any error while cleaning with gradlew clean, then in the next step you need to give this command -->
+gradlew clean -x externalNativeBuildCleanRelease      step - 3
+
+
 <!-- After this command, this command -->
 
 <!-- APK gradlew assembleRelease -->

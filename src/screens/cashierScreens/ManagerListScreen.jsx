@@ -596,7 +596,8 @@ const styles = StyleSheet.create({
     },
     doubleButton: {
         backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
-        borderRadius: 30
+        borderRadius: 30,
+        paddingHorizontal: 5,
     },
     doubleButtonText: {
         fontSize: 15,

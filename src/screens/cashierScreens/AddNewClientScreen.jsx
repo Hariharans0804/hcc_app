@@ -41,6 +41,11 @@ const AddNewClientScreen = ({ navigation }) => {
     const [assignDistributor, setAssignDistributor] = useState('');
     // console.log('22222222222',newClientData);
     const [showBankInputs, setShowBankInputs] = useState(false);
+    const [showDistriputorInputs, setShowDistriputorInputs] = useState(false);
+    const [distributorName, setDistributorName] = useState('');
+    const [distributorNumber, setDistributorNumber] = useState('');
+    const [distributorTodayRate, setDistributorTodayRate] = useState('');
+    const [loginUserData, setLoginUserData] = useState(null);
     const [employeesData, setEmployeesData] = useState([]);
 
 
@@ -53,6 +58,17 @@ const AddNewClientScreen = ({ navigation }) => {
         { label: 'Bank 1', value: 'bank1' },
         { label: 'Bank 2', value: 'bank2' }
     ];
+
+
+    const fetchGetLoginUserData = async () => {
+        try {
+            const data = await getFromStorage('users');
+            // console.log('22222', data);
+            setLoginUserData(data);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
 
 
     // Fetch Employee data
@@ -111,11 +127,52 @@ const AddNewClientScreen = ({ navigation }) => {
     useFocusEffect(
         useCallback(() => {
             fetchEmpoyeesData();
+            fetchGetLoginUserData();
             // const today = new Date();
             // const currentDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
             // console.log(currentDate);
         }, [])
     )
+
+
+    const fetchAddNewDistributor = async () => {
+        if (distributorName && distributorNumber && distributorTodayRate > 0) {
+            try {
+                const today = new Date();
+                // console.log(today);
+                const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
+
+                const addNewDistributor = {
+                    username: distributorName,
+                    phone_number: distributorNumber,
+                    role: "Distributor",
+                    today_rate_date: formattedDate,
+                    Distributor_today_rate: distributorTodayRate,
+                };
+
+                const response = await axiosInstance.post(`/distrbutorCreated`,
+                    addNewDistributor,
+                );
+                // console.log(response.data);
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'New Distributor and TodayRate Added Successfully!',
+                    // text2: 'This is some something 👋'
+                });
+
+                setDistributorName('');
+                setDistributorNumber('');
+                setDistributorTodayRate('');
+                setShowDistriputorInputs(!showDistriputorInputs);
+
+                fetchEmpoyeesData();
+
+            } catch (error) {
+                console.error('Error adding new employee:', error.response ? error.response.data : error.message);
+            }
+        }
+    }
 
     const fetchAddNewClient = async () => {
         if (clientName && clientNumber && clientCity && clientAmount > 0) {
@@ -189,6 +246,7 @@ const AddNewClientScreen = ({ navigation }) => {
     }
 
     const isAddButtonDisabled = !(clientName && clientNumber && clientCity && clientAmount > 0);
+    const isAddDistributorButtonDisabled = !(distributorName && distributorNumber && distributorTodayRate > 0);
 
     // const isAddButtonDisabled = !(
     //     clientName &&
@@ -503,6 +561,8 @@ const AddNewClientScreen = ({ navigation }) => {
                             </View>
                         </>
                     )}
+
+
                     {/* DROPDOWN BELOW TEXT INPUT */}
                     {/* <View style={[styles.dropdownWrapper, isFocus && { zIndex: 1000 }]}>
                         <Dropdown
@@ -691,13 +751,119 @@ const AddNewClientScreen = ({ navigation }) => {
                         </>
                     )}
 
-                    <TouchableOpacity
-                        style={[styles.addBankButton, { backgroundColor: showBankInputs ? Colors.DEFAULT_DARK_RED : Colors.DEFAULT_GREEN }]}
-                        activeOpacity={0.8}
-                        onPress={() => setShowBankInputs(!showBankInputs)}
-                    >
-                        <Text style={styles.addBankButtonText}>{showBankInputs ? 'Cancel' : 'Add Bank'}</Text>
-                    </TouchableOpacity>
+                    <View style={styles.buttonContainer}>
+                        <TouchableOpacity
+                            style={[styles.addBankButton, { backgroundColor: showBankInputs ? Colors.DEFAULT_DARK_RED : Colors.DEFAULT_GREEN }]}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                                if (showBankInputs) {
+                                    setAccountNumber('');
+                                    setBankName('');
+                                    setIfscCode('');
+                                }
+                                setShowBankInputs(!showBankInputs)
+                            }}
+                        >
+                            <Text style={styles.addBankButtonText}>{showBankInputs ? 'Cancel' : 'Add Bank'}</Text>
+                        </TouchableOpacity>
+                        {/* <TouchableOpacity onPress={() => navigation.navigate('ManagerDashboard')}>
+                            <Text>go</Text>
+                        </TouchableOpacity> */}
+                        {loginUserData?.role === "Admin" && (
+                            <TouchableOpacity style={[styles.addBankButton, { backgroundColor: showDistriputorInputs ? Colors.DEFAULT_DARK_RED : Colors.DEFAULT_GREEN }]}
+                                activeOpacity={0.8}
+                                onPress={() => {
+                                    if (showDistriputorInputs) {
+                                        setDistributorName('');
+                                        setDistributorNumber('');
+                                        setDistributorTodayRate('');
+                                    }
+                                    setShowDistriputorInputs(!showDistriputorInputs)
+                                }}
+                            >
+                                <Text style={styles.addBankButtonText}>{showDistriputorInputs ? 'Cancel' : 'Add Distributor'}</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
+                    {showDistriputorInputs && (
+                        <>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Distributer Name'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
+                                    value={distributorName}
+                                    onChangeText={setDistributorName}
+                                />
+                                {distributorName && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setDistributorName('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Distributor Number'
+                                    keyboardType='numeric'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={distributorNumber}
+                                    onChangeText={setDistributorNumber}
+                                />
+                                {distributorNumber && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setDistributorNumber('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Today Rate'
+                                    keyboardType='numeric'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={distributorTodayRate}
+                                    onChangeText={setDistributorTodayRate}
+                                />
+                                {distributorTodayRate && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setDistributorTodayRate('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+
+                            <TouchableOpacity
+                                activeOpacity={0.8}
+                                style={[
+                                    styles.addNewClientButton,
+                                    isAddDistributorButtonDisabled ? styles.buttonDisabled : styles.buttonEnabled
+                                ]}
+                                onPress={fetchAddNewDistributor}
+                                disabled={isAddDistributorButtonDisabled}
+                            >
+                                <Text style={styles.addBankButtonText}>Save Distributor</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
 
                     <TouchableOpacity
                         activeOpacity={0.8}
@@ -727,7 +893,7 @@ const styles = StyleSheet.create({
     },
     scrollContainer: {
         flexGrow: 1,
-        paddingBottom: 20,
+        paddingBottom: 80,
     },
     clientContainer: {
         paddingHorizontal: 20,
@@ -819,15 +985,22 @@ const styles = StyleSheet.create({
     },
     addBankButton: {
         // backgroundColor: Colors.DEFAULT_GREEN,
+        paddingHorizontal: 10,
         marginVertical: 10,
-        borderRadius: 30
+        borderRadius: 25
     },
     addBankButtonText: {
-        fontSize: 20,
-        lineHeight: 20 * 1.4,
+        fontSize: 18,
+        lineHeight: 18 * 1.4,
         fontFamily: Fonts.POPPINS_SEMI_BOLD,
         color: Colors.DEFAULT_LIGHT_WHITE,
         textAlign: 'center',
         padding: 10,
     },
+    buttonContainer: {
+        // borderWidth:1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+    }
 })
