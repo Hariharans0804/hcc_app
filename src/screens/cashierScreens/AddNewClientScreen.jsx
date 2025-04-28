@@ -235,6 +235,8 @@ const AddNewClientScreen = ({ navigation }) => {
                 setSenderInformation('');
                 setNarration('');
 
+                setShowBankInputs(!showBankInputs);
+
             } catch (error) {
                 // console.log('00000000000', error.message);
                 console.error('Error adding new client:', error.response ? error.response.data : error.message);
