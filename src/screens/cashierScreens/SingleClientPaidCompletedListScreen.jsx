@@ -125,7 +125,7 @@ const SingleClientPaidCompletedListScreen = ({ route }) => {
   return (
     <View style={styles.container}>
       <ScrollView>
-        <View style={{ paddingBottom: 20, paddingTop: 10 }}>
+        <View style={{ paddingBottom: 50, paddingTop: 10 }}>
           <Image source={Images.MAN} resizeMode='contain' style={styles.image} />
           <Text style={styles.headingText}>Distributor Name : <Text style={styles.detailsText}>{distributorName}</Text></Text>
           <Text style={styles.headingText}>Client ID : <Text style={styles.detailsText}>{client.client_id}</Text></Text>

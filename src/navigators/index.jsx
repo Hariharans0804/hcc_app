@@ -34,12 +34,15 @@ import {
     SendClientsToAgentsScreen,
     SingleClientPaymentListScreen,
     SingleEmployeeClientListScreen,
+    PaidAmountEditScreen,
+    DistributorHome,
 } from '../screens/cashierScreens';
 import {
     CollectionClientListScreen,
     CollectionClientPaidCompletedListScreen,
     CollectionHistoryScreen,
     CollectionHomeScreen,
+    CollectionPaidAmountEditScreen,
     CollectionPaidCompletedListScreen,
     CollectionTodayAmountScreen,
 } from '../screens/collectionScreens';
@@ -178,6 +181,11 @@ const Navigators = () => {
                                 component={SingleEmployeeClientListScreen}
                                 options={{ title: 'Single Employee Client List', }}
                             />
+                            <Stack.Screen
+                                name='PaidAmountEditList'
+                                component={PaidAmountEditScreen}
+                                options={{ title: 'Paid Amount Edit List', }}
+                            />
                         </>
                     )}
 
@@ -188,6 +196,11 @@ const Navigators = () => {
                                 name="CollectionClientPaidCompletedList"
                                 component={CollectionClientPaidCompletedListScreen}
                                 options={{ title: 'Client Full Paid Details' }}
+                            />
+                            <Stack.Screen
+                                name='CollectionPaidAmountEditList'
+                                component={CollectionPaidAmountEditScreen}
+                                options={{ title: 'Paid Amount Edit List', }}
                             />
                         </>
                     )}
@@ -266,6 +279,11 @@ const CollectionManagerDrawerNavigation = ({ role, }) => {
                 options={{ headerTitle: 'Distributor & Agent Client List', }}
                 name="EmployeeList"
                 component={EmployeeListScreen}
+            />
+            <Drawer.Screen
+                options={{ title: 'Distributor Home', }}
+                name='DistributorClientHome'
+                component={DistributorHome}
             />
         </Drawer.Navigator>
     )
@@ -740,7 +758,7 @@ const CustomDrawerContent = (props) => {
                         >
                         </DrawerItem>
                         <DrawerItem
-                            label={'Home'}
+                            label={'Client Home'}
                             onPress={() => {
                                 props.navigation.navigate('Home')
                             }}
@@ -759,7 +777,26 @@ const CustomDrawerContent = (props) => {
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
                         </DrawerItem>
-
+                        <DrawerItem
+                            label={'Distributor Home'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorClientHome')
+                            }}
+                            icon={() =>
+                                <MaterialCommunityIcons
+                                    name="nature-people"
+                                    size={22}
+                                    color={focused === 'DistributorClientHome' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorClientHome'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem>
                         <DrawerItem
                             label={'Collection List'}
                             onPress={() => {

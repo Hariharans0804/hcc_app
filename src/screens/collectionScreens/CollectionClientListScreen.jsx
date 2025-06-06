@@ -16,13 +16,14 @@ import { API_HOST } from "@env";
 import moment from 'moment';
 
 
-const CollectionClientListScreen = () => {
+const CollectionClientListScreen = ({ navigation }) => {
 
   const [selectedItem, setSelectedItem] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   // const [modalContent, setModalContent] = useState();
-  const [amountValue, setAmountValue] = useState(kuwaitLocalBalanceAmount ? kuwaitLocalBalanceAmount : "0.000");
+  // const [amountValue, setAmountValue] = useState(kuwaitLocalBalanceAmount ? kuwaitLocalBalanceAmount : "0.000");
+  const [amountValue, setAmountValue] = useState('');
   const [singleAgentCollectionList, setSingleAgentCollectionList] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [errorMessage, setErrorMessage] = useState('');
@@ -75,7 +76,7 @@ const CollectionClientListScreen = () => {
       const currentDate = moment().format('DD-MM-YYYY');
 
       const unpaidCollectionList = collectionsList.filter(
-        (item) => item.paid_and_unpaid !== 1 && item.assigned_date === currentDate
+        (item) => /*item.paid_and_unpaid !== 1 &&*/ item.assigned_date === currentDate
       );
 
       setSingleAgentCollectionList(unpaidCollectionList);
@@ -121,7 +122,8 @@ const CollectionClientListScreen = () => {
 
 
     if (amountValue > 0) {
-      if (Number(amountValue) > localRemainingAmount) {
+      // if (Number(amountValue) > localRemainingAmount) {
+      if (Number(amountValue).toFixed(3) > localRemainingAmount.toFixed(3)) {
         // Toast.show({
         //   type: 'error',
         //   text1: 'Entered amount exceeds balance amount!',
@@ -297,11 +299,11 @@ const CollectionClientListScreen = () => {
     : "0.000"; // Ensuring a string with 3 decimal places
   // console.log('kuwaitLocalBalanceAmount', kuwaitLocalBalanceAmount);
 
-  useEffect(() => {
-    if (kuwaitLocalBalanceAmount !== undefined) {
-      setAmountValue(kuwaitLocalBalanceAmount);
-    }
-  }, [kuwaitLocalBalanceAmount]);
+  // useEffect(() => {
+  //   if (kuwaitLocalBalanceAmount !== undefined) {
+  //     setAmountValue(kuwaitLocalBalanceAmount);
+  //   }
+  // }, [kuwaitLocalBalanceAmount]);
 
   let rowsIndex = 0;
 
@@ -472,7 +474,7 @@ const CollectionClientListScreen = () => {
                   : "No Payments"}
               </Text> */}
                 <Text style={styles.detailsText}>Last Paid Date : {modalLastPaidDate}</Text>
-                <Text style={styles.detailsText}>Balance Amount : {kuwaitLocalBalanceAmount}</Text>
+                <Text style={styles.detailsText}>Balance Amount : {Math.abs(kuwaitLocalBalanceAmount).toFixed(3)}</Text>
                 <View style={styles.amountInputContainer}>
                   <Text style={styles.detailsText}>Today Amount : </Text>
                   <TextInput
@@ -496,6 +498,17 @@ const CollectionClientListScreen = () => {
                 {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
                 <View style={styles.saveButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    activeOpacity={0.8}
+                    onPress={() => {
+                      setUpdateModalVisible(false);
+                      navigation.navigate('CollectionPaidAmountEditList', { editClient: selectedItem })
+                    }}
+                  >
+                    <Text style={styles.editButtonText}>Edit</Text>
+                    <Feather name="edit" size={20} color={Colors.DEFAULT_LIGHT_BLUE} />
+                  </TouchableOpacity>
                   <TouchableOpacity style={[
                     styles.saveButton,
                     isUpdateButtonDisabled ? styles.buttonDisabled : styles.buttonEnabled
@@ -637,7 +650,10 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   saveButtonContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    // borderWidth: 1,
     marginVertical: 10
   },
   saveButton: {
@@ -648,7 +664,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    width: Display.setWidth(32),
+    width: Display.setWidth(28),
     marginVertical: 5,
     padding: 8,
     // backgroundColor: Colors.DEFAULT_LIGHT_WHITE
@@ -772,6 +788,22 @@ const styles = StyleSheet.create({
   flatListContainer: {
     paddingBottom: 50,
     // borderWidth:1
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 8,
+    backgroundColor: Colors.DEFAULT_LIGHT_WHITE,
+    width: Display.setWidth(28),
+    borderRadius: 25,
+  },
+  editButtonText: {
+    fontSize: 18,
+    lineHeight: 18 * 1.4,
+    fontFamily: Fonts.POPPINS_SEMI_BOLD,
+    color: Colors.DEFAULT_DARK_BLUE
   },
 })
 

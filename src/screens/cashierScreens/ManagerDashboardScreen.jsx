@@ -22,6 +22,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
     const [clientsData, setClientsData] = useState([]);
     const [paidClientsData, setPaidClientsData] = useState([]);
     const [unpaidClientsData, setUnpaidClientsData] = useState([]);
+    const [todayCreateClientsData, setTodayCreateClientsData] = useState([]);
     const [totals, setTotals] = useState({ overall: 0, paid: 0, unpaid: 0 });
     // const [adminData, setAdminData] = useState([]);
     const [employeesData, setEmployeesData] = useState([]);
@@ -193,6 +194,14 @@ const ManagerDashboardScreen = ({ navigation }) => {
             setUnpaidClientsData(unpaidClientsDataList);
             // console.log('555555',unpaidClientsDataList);
 
+            //filter today create clients data
+            const todayClientsData = response.data.filter((item) =>
+                item.date === currentDate
+            );
+            setTodayCreateClientsData(todayClientsData)
+            // console.log(todayClientsData);
+
+
         } catch (error) {
             // Handle errors
             if (error.response) {
@@ -215,7 +224,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
                 fetchEmployeesData();
             };
             fetchData();
-        }, [agentData]) //agentData
+        }, []) //agentData
     )
 
     const screenWidth = Dimensions.get("window").width;
@@ -373,9 +382,33 @@ const ManagerDashboardScreen = ({ navigation }) => {
 
             console.log("Sending data:", todayRateSet);
 
+            // Step 1: Update the distributor
             const response = await axiosInstance.put(`/update-distributor-amount/${selectedItem.user_id}`, todayRateSet);
             // const response = await axiosInstance.post(`/update-distributor-amount`, todayRateSet);
             // { headers: { 'Content-Type': 'application/json' } }
+
+
+            // Step 2: Find clients without today_rate
+            const targetClients = todayCreateClientsData.filter(
+                client =>
+                    client.Distributor_id === selectedItem.user_id &&
+                    client.date === currentDate &&
+                    !client.today_rate
+            );
+
+            // Step 3: Update each client with today_rate
+            const updateClientPromises = targetClients.map(client =>
+                axiosInstance.put(`/acc_clientupdated/${client.client_id}`, {
+                    ...client,
+                    today_rate: assignTodayRate
+                })
+            );
+
+            await Promise.all(updateClientPromises);
+            console.log('Updated clients with new today_rate');
+
+
+
 
             Toast.show({
                 type: 'success',
@@ -385,6 +418,8 @@ const ManagerDashboardScreen = ({ navigation }) => {
 
             setTodayRateModalVisiable(false);
             setSearchText('');
+
+            fetchEmployeesData();
 
             console.log('Response:', response.data);
         } catch (error) {
@@ -440,70 +475,54 @@ const ManagerDashboardScreen = ({ navigation }) => {
         setSearchText('');
     }
 
-    // const searchAgentData = agentData.filter((item) => {
-    //     const searchTextLower = searchText.toLowerCase();
-    //     const isMatchingSearch =
-    //         item.username?.toLowerCase().includes(searchTextLower) ||
-    //         item.phone_number?.toLowerCase().includes(searchText);
-
-    //     return isMatchingSearch;
-    // })
-
-    // const searchAgentData = useMemo(() => {
-    //     const searchTextLower = searchText.toLowerCase();
-    //     return agentData.filter((item) =>
-    //         item.username?.toLowerCase().includes(searchTextLower) ||
-    //         item.phone_number?.toLowerCase().includes(searchText)
-    //     );
-    // }, [searchText, agentData]); // Dependencies: only recalculate when these change
-
-
 
     // const searchDistributorData = useMemo(() => {
     //     if (!agentData || !Array.isArray(agentData)) return [];
 
     //     const searchTextLower = searchText.toLowerCase().trim();
-
-    //     const filteredDistributors = agentData.filter(
-    //         item => item.role === "Distributor" && item.today_rate_date === currentDate
-    //     );
+    //     const allDistributors = agentData.filter(item => item.role === "Distributor");
 
     //     if (!searchTextLower) {
-    //         // If search is empty, return all distributors
-    //         return filteredDistributors;
+    //         // No search — show only today's updated distributors
+    //         return allDistributors.filter(item => item.today_rate_date === currentDate);
     //     }
 
-    //     const matched = agentData.filter(item =>
+    //     // Search active — filter by username or phone number
+    //     return allDistributors.filter(item =>
     //         (item.username || "").toLowerCase().includes(searchTextLower) ||
     //         (item.phone_number || "").toLowerCase().includes(searchTextLower)
     //     );
-
-    //     return matched.length > 0 ? matched : filteredDistributors;
-
     // }, [searchText, agentData, currentDate]);
 
 
-    const searchDistributorData = useMemo(() => {
-        if (!agentData || !Array.isArray(agentData)) return [];
-    
+
+
+    const matchedDistributors = useMemo(() => {
+        if (!todayCreateClientsData || !agentData) return [];
+
         const searchTextLower = searchText.toLowerCase().trim();
         const allDistributors = agentData.filter(item => item.role === "Distributor");
-    
+
+
+        // Extract all unique Distributor_ids from today's clients
+        const distributorIds = [
+            ...new Set(todayCreateClientsData.map(client => client.Distributor_id))
+        ];
+
+        // Filter agentData to find users whose user_id matches a Distributor_id
         if (!searchTextLower) {
-            // No search — show only today's updated distributors
-            return allDistributors.filter(item => item.today_rate_date === currentDate);
+            return agentData.filter(agent =>
+                distributorIds.includes(agent.user_id)
+            );
         }
-    
+
         // Search active — filter by username or phone number
         return allDistributors.filter(item =>
             (item.username || "").toLowerCase().includes(searchTextLower) ||
             (item.phone_number || "").toLowerCase().includes(searchTextLower)
         );
-    }, [searchText, agentData, currentDate]);
-    
 
-
-
+    }, [searchText, todayCreateClientsData, agentData]);
 
 
 
@@ -703,7 +722,13 @@ const ManagerDashboardScreen = ({ navigation }) => {
                                 <Text style={[styles.tableHeading, { flex: 1.5 }]}>Action</Text>
                             </View>
 
-                            {searchDistributorData.length === 0 ? (
+                            {/* {loading ? (
+                                <ActivityIndicator
+                                    size="large"
+                                    color={Colors.DEFAULT_DARK_BLUE}
+                                    style={{ marginTop: 20, }}
+                                />
+                            ) : searchDistributorData.length === 0 ? (
                                 <View style={{ padding: 15 }}>
                                     <Text style={styles.emptyText}>
                                         {searchText
@@ -715,6 +740,67 @@ const ManagerDashboardScreen = ({ navigation }) => {
                             ) : (
                                 searchDistributorData
                                     // .filter(item => item.role === "Distributor" && item.today_rate_date === currentDate)
+                                    .map((item, index) => (
+                                        <View key={item.user_id?.toString()} style={styles.row}>
+                                            <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>
+                                            <Text style={[styles.cell, { flex: 3 }]}>
+                                                {item.username}
+                                                {"\n"}
+                                                <Text style={styles.cityText}>{item.phone_number}</Text>
+                                            </Text>
+                                            <Text style={[styles.cell, { flex: 2 }]}>
+                                                {item.today_rate_date === currentDate ? item.Distributor_today_rate : '0'}
+                                                {"\n"}
+                                                <Text style={styles.cityText}>{item.today_rate_date === currentDate ? item.today_rate_date : ''}</Text>
+                                            </Text>
+                                            <View style={[styles.buttonContainer, { flex: 1.5 }]}>
+                                                <TouchableOpacity
+                                                    style={styles.rateButton}
+                                                    activeOpacity={0.8}
+                                                    // onPress={() => setTodayRateModalVisiable(true)}
+                                                    onPress={() => handleClickDistributor(item)}
+                                                >
+                                                    <Text
+                                                        style={[
+                                                            styles.cell,
+                                                            {
+                                                                fontSize: 13,
+                                                                lineHeight: 13 * 1.4,
+                                                                textTransform: "uppercase",
+                                                                color: Colors.DEFAULT_LIGHT_WHITE,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        Rate
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    ))
+                            )} */}
+
+                            {loading ? (
+                                <ActivityIndicator
+                                    size="large"
+                                    color={Colors.DEFAULT_DARK_BLUE}
+                                    style={{ marginTop: 20, }}
+                                />
+                            ) : matchedDistributors.length === 0 ? (
+                                <View style={{ padding: 15 }}>
+                                    <Text style={styles.emptyText}>
+                                        {searchText
+                                            ? `No distributor found matching "${searchText}"!`
+                                            : `${currentDate} No amount update for any distributor today!`
+                                        }
+                                    </Text>
+                                </View>
+                            ) : (
+                                matchedDistributors
+                                    .sort((a, b) => {
+                                        const aValid = a.Distributor_today_rate !== '0.00' && a.today_rate_date === currentDate;
+                                        const bValid = b.Distributor_today_rate !== '0.00' && b.today_rate_date === currentDate;
+                                        return aValid === bValid ? 0 : aValid ? -1 : 1; // Put valid first
+                                    })
                                     .map((item, index) => (
                                         <View key={item.user_id?.toString()} style={styles.row}>
                                             <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>

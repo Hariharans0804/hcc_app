@@ -11,6 +11,7 @@ import Toast from 'react-native-toast-message';
 import SearchInput from "react-native-search-filter";
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
+import { Dropdown } from 'react-native-element-dropdown';
 import { getFromStorage } from '../../utils/mmkvStorage';
 import { API_HOST } from "@env";
 
@@ -28,11 +29,22 @@ const HomeScreen = ({ navigation }) => {
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState([]);
   const [employeesData, setEmployeesData] = useState([]);
+
   const [distributorList, setDistributorList] = useState([]);
+  const [longPressSelectedItems, setLongPressSelectedItems] = useState([]);
+  const [selectionMode, setSelectionMode] = useState(false);
+  // console.log('longPressSelectedItems', longPressSelectedItems);
+  const [agentList, setAgentList] = useState([]);
+  const [isFocus, setIsFocus] = useState(false);
+  const [agentAssign, setAgentAssign] = useState('');
+  // console.log('agentAssign', agentAssign);
+
+
+  const isAgentAssignButtonDisabled = !agentAssign;
 
   const isFocused = useIsFocused();
 
-  // console.log('111111111111', clientsData);
+  // console.log('111111111111', distributorList);
 
   // const [loginUserData, setLoginUserData] = useState(null);
 
@@ -144,16 +156,24 @@ const HomeScreen = ({ navigation }) => {
       });
 
       const distributorList = response.data
-        .filter((item) => item.role === "Distributor")
+        .filter((item) => item.role === "Distributor");
+      // .map((item) => ({
+      //   label: item.username,
+      //   value: item.user_id,
+      // }));
+
+      const agentList = response.data
+        .filter((item) => item.role === "Collection Agent")
         .map((item) => ({
           label: item.username,
           value: item.user_id,
         }));
 
+      setAgentList(agentList);
       setDistributorList(distributorList);
       setEmployeesData(response.data);
       // console.log(response.data);
-      // console.log(distributorList);
+      // console.log(agentList.length);
 
     } catch (error) {
       // Handle errors
@@ -230,6 +250,7 @@ const HomeScreen = ({ navigation }) => {
 
       // Reset the search text whenever the screen gains focus
       setSearchText('');
+      // setAgentAssign('');
       // fetchGetLoginUserData();
     }, [])
   )
@@ -316,72 +337,200 @@ const HomeScreen = ({ navigation }) => {
   // Calculate the remaining amount
   const modalRemainingAmount = selectedItem.amount - modalTotalPaidAmount;
 
+
+  // =======================================================================
+
+
+  const toggleLongPressSelection = (clientId) => {
+    setSelectionMode(true);
+    setLongPressSelectedItems([clientId]); // Only select the long-pressed item
+  };
+
+  const toggleCheckboxSelection = (clientId) => {
+    setLongPressSelectedItems((prev) => {
+      if (prev.includes(clientId)) {
+        return prev.filter((id) => id !== clientId);
+      } else {
+        return [...prev, clientId];
+      }
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (longPressSelectedItems.length === clientsData.length) {
+      setLongPressSelectedItems([]); // Deselect All
+    } else {
+      const allIds = clientsData.map(item => item.client_id); // Select All
+      setLongPressSelectedItems(allIds);
+    }
+  };
+
+
+  // const selectAll = () => {
+  //   const allIds = clientsData.map(item => item.client_id);
+  //   setLongPressSelectedItems(allIds);
+  // };
+
+  // const deselectAll = () => {
+  //   setLongPressSelectedItems([]);
+  // };
+
+  const cancelSelection = () => {
+    setSelectionMode(false);
+    setLongPressSelectedItems([]);
+  };
+
+
+  const multipleClientsSingleAgentAssigned = async () => {
+
+    if (longPressSelectedItems.length === 0) {
+      Toast.show({
+        type: 'error',
+        text1: `You have not selected any clients yet!`
+      });
+      return; // ✅ Exit early
+    }
+
+    // Check if any selected client has a today_rate > 0
+    const hasRate = longPressSelectedItems.some(id => {
+      const client = clientsData.find(c => c.client_id === id);
+      return client?.today_rate <= 0;
+    });
+
+    if (hasRate) {
+      Toast.show({
+        type: 'error',
+        text1: `If you set a today rate, you can't assign it to any agent!`
+      });
+      return;
+    }
+
+    try {
+      const today = new Date();
+      const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
+
+      const payload = longPressSelectedItems.map(clientId => ({
+        client_id: clientId,
+        user_id: agentAssign,
+        sent: true,
+        assigned_date: formattedDate
+      }));
+      // console.log('6666666', payload);
+
+      const response = await axiosInstance.post(`/client_IDupdateds`, payload);
+      // console.log('6666666', response.data);
+
+
+      Toast.show({
+        type: 'success',
+        text1: 'Assign Employee Successfully!',
+        // text2: 'This is some something 👋'
+      });
+
+      fetchClientsData();
+
+    } catch (error) {
+      console.error('Error updating client:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to assign clients',
+        text2: error.response?.data?.message || 'Something went wrong!',
+      });
+    }
+  }
+
+
   const renderItem = ({ item, index }) => {
+    const distributor = distributorList.find(
+      (distributor) => distributor.user_id === item.Distributor_id
+    );
+    // console.log(distributor);
+
+    const isSelected = longPressSelectedItems.includes(item.client_id);
 
     return (
-      <View style={styles.row}>
-        <Text style={[styles.cell, { flex: 1 }]}>
-          {index + 1}
-          {/* {item.client_id} */}
-        </Text>
-        <Text style={[styles.cell, { flex: 3 }]} >
-          {(item.client_name || '').replace(/"/g, '')}
-          {"\n"}
-          <Text style={styles.cityText}>{item.client_city || ''}</Text>
-        </Text>
-        <Text style={[styles.cell, { flex: 3 }]}>{item.client_contact}</Text>
+      <TouchableOpacity
+        onLongPress={() => toggleLongPressSelection(item.client_id)}
+        onPress={() => selectionMode && toggleCheckboxSelection(item.client_id)}
+        activeOpacity={0.8}
+      >
+        <View style={[styles.row, isSelected && { backgroundColor: '#e6f7ff' }]}>
+          <View style={[styles.cell, { flex: 1, flexDirection: 'row', alignItems: 'center', /*borderWidth: 1*/ }]}>
+            {selectionMode ? (
+              <Ionicons
+                name={isSelected ? 'checkbox-outline' : 'square-outline'}
+                size={18}
+                color="green"
+                style={{ marginRight: 4, }}
+              />
+            ) : (
+              <View style={{ width: 13 }} />
+            )}
+            <Text style={{ fontSize: 14, lineHeight: 14 * 1.4, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}>{index + 1}</Text>
+          </View>
+          {/* <Text style={[styles.cell, { flex: 1 }]}>
+            {index + 1}
+          </Text> */}
+          <Text style={[styles.cell, { flex: 3 }]} >
+            {(item.client_name || '').replace(/"/g, '')}
+            {"\n"}
+            <Text style={styles.cityText}>{item.client_contact || ''}</Text>
+          </Text>
+          {/* <Text style={[styles.cell, { flex: 3 }]}>{item.client_contact}</Text> */}
+          <Text style={[styles.cell, { flex: 3 }]}>{distributor ? distributor.username : 'Unknown'}</Text>
 
-        <View style={[styles.buttonContainer, { flex: 2 }]}>
-          {/* {item.sent === 0 && ( */}
-          <TouchableOpacity
-            style={[styles.viewButton, { backgroundColor: Colors.DEFAULT_GREEN }]}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('SendClientsToAgents', { assignEmployee: item })}
-          // onPress={() => navigation.navigate('DrawerNavigation', { screen: 'SendClientsToAgents', params: { assignEmployee: item } })}
+          <View style={[styles.buttonContainer, { flex: 2 }]}>
+            {/* {item.sent === 0 && ( */}
+            <TouchableOpacity
+              style={[styles.viewButton, { backgroundColor: Colors.DEFAULT_GREEN }]}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('SendClientsToAgents', { assignEmployee: item })}
+            // onPress={() => navigation.navigate('DrawerNavigation', { screen: 'SendClientsToAgents', params: { assignEmployee: item } })}
 
-          >
-            <FontAwesome
-              name="send"
-              size={15}
-              color={Colors.DEFAULT_LIGHT_WHITE}
-            />
-            <Text style={[
-              styles.cell,
-              {
-                fontSize: 12,
-                lineHeight: 12 * 1.4,
-                textTransform: 'uppercase',
-                color: Colors.DEFAULT_LIGHT_WHITE,
-              }
-            ]}>Send</Text>
-          </TouchableOpacity>
-          {/* )} */}
+            >
+              <FontAwesome
+                name="send"
+                size={15}
+                color={Colors.DEFAULT_LIGHT_WHITE}
+              />
+              <Text style={[
+                styles.cell,
+                {
+                  fontSize: 12,
+                  lineHeight: 12 * 1.4,
+                  textTransform: 'uppercase',
+                  color: Colors.DEFAULT_LIGHT_WHITE,
+                }
+              ]}>Send</Text>
+            </TouchableOpacity>
+            {/* )} */}
 
-          <TouchableOpacity
-            style={styles.viewButton}
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('SingleClientView', { viewSingleClient: item, employeesDataList: employeesData })}
-          // onPress={() => navigation.navigate('DrawerNavigation', { screen: 'SingleClientView', params: { viewSingleClient: item } })}
+            <TouchableOpacity
+              style={styles.viewButton}
+              activeOpacity={0.8}
+              onPress={() => navigation.navigate('SingleClientView', { viewSingleClient: item, employeesDataList: employeesData })}
+            // onPress={() => navigation.navigate('DrawerNavigation', { screen: 'SingleClientView', params: { viewSingleClient: item } })}
 
-          >
-            <Ionicons
-              name="eye"
-              size={15}
-              color={Colors.DEFAULT_BLACK}
-            />
-            <Text style={[
-              styles.cell,
-              {
-                fontSize: 12,
-                lineHeight: 12 * 1.4,
-                textTransform: 'uppercase',
-                color: Colors.DEFAULT_BLACK,
-              }
-            ]}>View</Text>
-          </TouchableOpacity>
+            >
+              <Ionicons
+                name="eye"
+                size={15}
+                color={Colors.DEFAULT_BLACK}
+              />
+              <Text style={[
+                styles.cell,
+                {
+                  fontSize: 12,
+                  lineHeight: 12 * 1.4,
+                  textTransform: 'uppercase',
+                  color: Colors.DEFAULT_BLACK,
+                }
+              ]}>View</Text>
+            </TouchableOpacity>
+          </View>
+
         </View>
-
-      </View>
+      </TouchableOpacity>
     )
   }
 
@@ -446,10 +595,91 @@ const HomeScreen = ({ navigation }) => {
         </View>
       </View>
 
+      {selectionMode && (
+        <>
+          <View style={styles.agentAssignContainer}>
+            <View style={[styles.dropdownWrapper, isFocus && { zIndex: 1000 }]}>
+              {/* <Text style={styles.updateClientDetailHeading}>Assign Employee:</Text> */}
+              <Dropdown
+                style={[styles.dropdown, isFocus && { borderColor: Colors.DEFAULT_LIGHT_BLUE }]}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                // containerStyle={{ marginTop: 0 }}
+                data={agentList}
+                search
+                searchPlaceholder="Search..."
+                labelField="label"
+                valueField="value"
+                placeholder={!agentAssign ? "Assign Employee" : ""}
+                maxHeight={250}
+                value={agentAssign}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={item => {
+                  // console.log('Selected:', item.value);
+                  setAgentAssign(item.value);
+                  setIsFocus(false);
+                }}
+                renderLeftIcon={() => (
+                  <AntDesign
+                    name="Safety"
+                    size={20}
+                    color={Colors.DEFAULT_DARK_BLUE}
+                    style={{ marginRight: 5, }}
+                  />
+                )}
+              />
+            </View>
+
+            <TouchableOpacity
+              activeOpacity={0.8}
+              style={[
+                styles.assignButton,
+                isAgentAssignButtonDisabled ? styles.buttonDisabled : styles.buttonEnabled
+              ]}
+              onPress={multipleClientsSingleAgentAssigned}
+              disabled={isAgentAssignButtonDisabled}
+            >
+              <Text style={styles.assignButtonText}>Assign</Text>
+            </TouchableOpacity>
+          </View>
+
+
+          <View style={styles.selectedContainer}>
+            <TouchableOpacity style={{ flex: 1 }} onPress={cancelSelection} activeOpacity={0.8}>
+              <Ionicons
+                name="close"
+                size={30}
+                color={Colors.DEFAULT_BLACK}
+              // style={{ marginRight: 10 }}
+              />
+            </TouchableOpacity>
+            <Text style={styles.selectedCountText}>{longPressSelectedItems.length} Item Selected</Text>
+            <TouchableOpacity
+              style={[
+                styles.selectButton,
+                {
+                  backgroundColor:
+                    longPressSelectedItems.length === clientsData.length
+                      ? Colors.DEFAULT_DARK_RED
+                      : Colors.DEFAULT_LIGHT_BLUE
+                },
+              ]}
+              onPress={toggleSelectAll}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.selectButtonText}>{longPressSelectedItems.length === clientsData.length ? 'Deselect All' : 'Select All'}</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+
       <View style={styles.header}>
         <Text style={[styles.heading, { flex: 1 }]}>No</Text>
-        <Text style={[styles.heading, { flex: 3 }]}>Name</Text>
-        <Text style={[styles.heading, { flex: 3 }]}>Mobile</Text>
+        <Text style={[styles.heading, { flex: 3 }]}>Client</Text>
+        <Text style={[styles.heading, { flex: 3 }]}>Distributor</Text>
         <Text style={[styles.heading, { flex: 2 }]}>Details</Text>
       </View>
 
@@ -652,12 +882,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 30,
   },
-  buttonEnabled: {
-    backgroundColor: Colors.DEFAULT_DARK_RED,
-  },
-  buttonDisabled: {
-    backgroundColor: '#C8CFDD',
-  },
+  // buttonEnabled: {
+  //   backgroundColor: Colors.DEFAULT_DARK_RED,
+  // },
+  // buttonDisabled: {
+  //   backgroundColor: '#C8CFDD',
+  // },
   modalAddButtonText: {
     fontSize: 20,
     lineHeight: 20 * 1.4,
@@ -796,6 +1026,94 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
     // borderWidth:1
   },
+  selectedContainer: {
+    flexDirection: 'row',
+    // justifyContent: 'space-around',
+    alignItems: 'center',
+    marginHorizontal: 15,
+    marginTop: 5,
+    // borderWidth: 1
+  },
+  selectedCountText: {
+    flex: 5,
+    fontSize: 18,
+    lineHeight: 18 * 1.4,
+    fontFamily: Fonts.POPPINS_REGULAR,
+  },
+  selectButton: {
+    flex: 2.5,
+    // backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
+    borderRadius: 8,
+  },
+  selectButtonText: {
+    textAlign: 'center',
+    fontSize: 16,
+    lineHeight: 16 * 1.4,
+    fontFamily: Fonts.POPPINS_MEDIUM,
+    color: Colors.DEFAULT_WHITE,
+    padding: 8,
+  },
+  agentAssignContainer: {
+    // borderWidth:1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 20
+
+  },
+  dropdown: {
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.DEFAULT_LIGHT_WHITE,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    width: Display.setWidth(60),
+    height: Display.setHeight(6),
+    backgroundColor: Colors.DEFAULT_LIGHT_WHITE,
+    elevation: 2,
+    // padding:10
+  },
+  placeholderStyle: {
+    fontFamily: Fonts.POPPINS_MEDIUM,
+    fontSize: 16,
+    lineHeight: 16 * 1.4,
+    color: Colors.DEFAULT_DARK_BLUE
+  },
+  selectedTextStyle: {
+    fontFamily: Fonts.POPPINS_MEDIUM,
+    fontSize: 16,
+    lineHeight: 16 * 1.4,
+    color: Colors.DEFAULT_BLACK
+  },
+  inputSearchStyle: {
+    fontFamily: Fonts.POPPINS_MEDIUM,
+    fontSize: 16,
+    lineHeight: 16 * 1.4,
+    color: Colors.DEFAULT_DARK_BLUE
+  },
+  iconStyle: {
+    width: Display.setWidth(5),
+    height: Display.setHeight(3),
+  },
+  assignButton: {
+    backgroundColor: Colors.DEFAULT_DARK_BLUE,
+    marginVertical: 20,
+    borderRadius: 30
+  },
+  buttonEnabled: {
+    backgroundColor: Colors.DEFAULT_DARK_BLUE,
+  },
+  buttonDisabled: {
+    backgroundColor: Colors.DEFAULT_DARK_GRAY,
+  },
+  assignButtonText: {
+    fontSize: 20,
+    lineHeight: 20 * 1.4,
+    fontFamily: Fonts.POPPINS_SEMI_BOLD,
+    color: Colors.DEFAULT_LIGHT_WHITE,
+    textAlign: 'center',
+    padding: 10,
+  }
 })
 
 

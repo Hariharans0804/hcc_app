@@ -103,7 +103,7 @@ const CollectionHomeScreen = ({ route }) => {
 
       // Filter unpaid clients
       const unpaidClientsList = collectionsList.filter(
-        (item) => item.paid_and_unpaid !== 1 && item.assigned_date === currentDate
+        (item) => /*item.paid_and_unpaid !== 1 &&*/ item.assigned_date === currentDate
       );
 
       setSingleAgentClientsData(unpaidClientsList);
@@ -314,7 +314,7 @@ const CollectionHomeScreen = ({ route }) => {
                   : "No Payments"}
               </Text> */}
                 <Text style={styles.detailsText}>Last Paid Date : {modalLastPaidDate}</Text>
-                <Text style={styles.detailsText}>Balance Amount : {kuwaitLocalBalanceAmount.toFixed(3)}</Text>
+                <Text style={styles.detailsText}>Balance Amount : {Math.abs(kuwaitLocalBalanceAmount).toFixed(3)}</Text>
               </View>
             </View>
           </View>

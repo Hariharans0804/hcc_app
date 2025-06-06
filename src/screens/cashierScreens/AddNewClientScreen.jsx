@@ -192,7 +192,7 @@ const AddNewClientScreen = ({ navigation }) => {
                     paid_and_unpaid: false,
                     success_and_unsuccess: false,
                     bank_type: (accountTypeValue || '').toUpperCase(),
-                    today_rate: todayRate || 0,
+                    today_rate: todayRate || '',
                     bank_name: (bankName || '').toUpperCase(),
                     accno: (accountNumber || '').toUpperCase(),
                     ifsc_code: (ifscCode || '').toUpperCase(),
@@ -235,7 +235,7 @@ const AddNewClientScreen = ({ navigation }) => {
                 setSenderInformation('');
                 setNarration('');
 
-                setShowBankInputs(!showBankInputs);
+                setShowBankInputs(false);
 
             } catch (error) {
                 // console.log('00000000000', error.message);
@@ -291,7 +291,7 @@ const AddNewClientScreen = ({ navigation }) => {
                 ? selectedDistributor.today_rate_date.split('T')[0]
                 : null;
 
-            setTodayRate(distributorDate === currentDate ? parseFloat(selectedDistributor.Distributor_today_rate).toString() : "0");
+            setTodayRate(distributorDate === currentDate ? parseFloat(selectedDistributor.Distributor_today_rate).toString() : "");
         } else {
             setTodayRate("0");
         }
@@ -373,7 +373,7 @@ const AddNewClientScreen = ({ navigation }) => {
                             searchPlaceholder="Search..."
                             labelField="label"
                             valueField="value"
-                            placeholder={!assignDistributor ? "Assign Distributor" : ""}
+                            placeholder={!assignDistributor ? "Assign Distributor" : "0"}
                             maxHeight={250}
                             value={assignDistributor}
                             onFocus={() => setIsFocusDistributor(true)}
@@ -499,6 +499,8 @@ const AddNewClientScreen = ({ navigation }) => {
                             </TouchableOpacity>
                         )}
                     </View>
+
+
                     {showBankInputs && (
                         <>
                             <View style={styles.textInputContainer}>
@@ -563,196 +565,6 @@ const AddNewClientScreen = ({ navigation }) => {
                             </View>
                         </>
                     )}
-
-
-                    {/* DROPDOWN BELOW TEXT INPUT */}
-                    {/* <View style={[styles.dropdownWrapper, isFocus && { zIndex: 1000 }]}>
-                        <Dropdown
-                            style={[styles.dropdown, isFocus && { borderColor: Colors.DEFAULT_LIGHT_BLUE }]}
-                            placeholderStyle={styles.placeholderStyle}
-                            selectedTextStyle={styles.selectedTextStyle}
-                            inputSearchStyle={styles.inputSearchStyle}
-                            iconStyle={styles.iconStyle}
-                            containerStyle={{ marginTop: 30 }}
-                            data={data}
-                            // search
-                            // searchPlaceholder="Search..."
-                            labelField="label"
-                            valueField="value"
-                            placeholder={!accountTypeValue ? "Client Bank Type" : ""}
-                            maxHeight={250}
-                            value={accountTypeValue}
-                            onFocus={() => setIsFocus(true)}
-                            onBlur={() => setIsFocus(false)}
-                            onChange={item => {
-                                // console.log('Selected:', item.label);
-                                setAccountTypeValue(item.value);
-                                setIsFocus(false);
-                            }}
-                            renderLeftIcon={() => (
-                                <AntDesign
-                                    name="Safety"
-                                    size={20}
-                                    color={Colors.DEFAULT_DARK_BLUE}
-                                    style={{ marginRight: 5, }}
-                                />
-                            )}
-                        />
-                    </View> */}
-
-                    {/* Conditional TextInputs based on dropdown selection */}
-                    {accountTypeValue === "bank1" && (
-                        <>
-                            {/* Display these fields if 'Local' is selected */}
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Narration'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
-                                    value={narration}
-                                    onChangeText={setNarration}
-                                />
-                                {narration && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setNarration('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </>
-                    )}
-
-                    {accountTypeValue === "bank2" && (
-                        <>
-                            {/* Display these fields if 'International' is selected */}
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Bank Name'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
-                                    value={bankName}
-                                    onChangeText={setBankName}
-                                />
-                                {bankName && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setBankName('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='IFSC Code'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
-                                    value={ifscCode}
-                                    onChangeText={setIfscCode}
-                                />
-                                {ifscCode && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setIfscCode('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Name of the Beneficiary'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={styles.textInput}
-                                    value={nameBeneficiary}
-                                    onChangeText={setNameBeneficiary}
-                                />
-                                {nameBeneficiary && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setNameBeneficiary('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Address of the Beneficiary'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={styles.textInput}
-                                    value={addressBeneficiary}
-                                    onChangeText={setAddressBeneficiary}
-                                />
-                                {addressBeneficiary && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setAddressBeneficiary('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Account Type'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={styles.textInput}
-                                    value={accountType}
-                                    onChangeText={setAccountType}
-                                />
-                                {accountType && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setAccountType('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Sender Information'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={styles.textInput}
-                                    value={senderInformation}
-                                    onChangeText={setSenderInformation}
-                                />
-                                {senderInformation && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setSenderInformation('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        </>
-                    )}
-
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity
                             style={[styles.addBankButton, { backgroundColor: showBankInputs ? Colors.DEFAULT_DARK_RED : Colors.DEFAULT_GREEN }]}
@@ -768,9 +580,8 @@ const AddNewClientScreen = ({ navigation }) => {
                         >
                             <Text style={styles.addBankButtonText}>{showBankInputs ? 'Cancel' : 'Add Bank'}</Text>
                         </TouchableOpacity>
-                        {/* <TouchableOpacity onPress={() => navigation.navigate('ManagerDashboard')}>
-                            <Text>go</Text>
-                        </TouchableOpacity> */}
+
+
                         {loginUserData?.role === "Admin" && (
                             <TouchableOpacity style={[styles.addBankButton, { backgroundColor: showDistriputorInputs ? Colors.DEFAULT_DARK_RED : Colors.DEFAULT_GREEN }]}
                                 activeOpacity={0.8}
@@ -1006,3 +817,196 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between'
     }
 })
+
+{/* <TouchableOpacity onPress={() => navigation.navigate('ManagerDashboard')}>
+                            <Text>go</Text>
+                        </TouchableOpacity> */}
+
+
+{/* DROPDOWN BELOW TEXT INPUT */ }
+{/* <View style={[styles.dropdownWrapper, isFocus && { zIndex: 1000 }]}>
+                        <Dropdown
+                            style={[styles.dropdown, isFocus && { borderColor: Colors.DEFAULT_LIGHT_BLUE }]}
+                            placeholderStyle={styles.placeholderStyle}
+                            selectedTextStyle={styles.selectedTextStyle}
+                            inputSearchStyle={styles.inputSearchStyle}
+                            iconStyle={styles.iconStyle}
+                            containerStyle={{ marginTop: 30 }}
+                            data={data}
+                            // search
+                            // searchPlaceholder="Search..."
+                            labelField="label"
+                            valueField="value"
+                            placeholder={!accountTypeValue ? "Client Bank Type" : ""}
+                            maxHeight={250}
+                            value={accountTypeValue}
+                            onFocus={() => setIsFocus(true)}
+                            onBlur={() => setIsFocus(false)}
+                            onChange={item => {
+                                // console.log('Selected:', item.label);
+                                setAccountTypeValue(item.value);
+                                setIsFocus(false);
+                            }}
+                            renderLeftIcon={() => (
+                                <AntDesign
+                                    name="Safety"
+                                    size={20}
+                                    color={Colors.DEFAULT_DARK_BLUE}
+                                    style={{ marginRight: 5, }}
+                                />
+                            )}
+                        />
+                    </View> */}
+
+{/* Conditional TextInputs based on dropdown selection */ }
+{/* {accountTypeValue === "bank1" && (
+                        <>
+                            Display these fields if 'Local' is selected
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Narration'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
+                                    value={narration}
+                                    onChangeText={setNarration}
+                                />
+                                {narration && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setNarration('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </>
+                    )}
+
+                    {accountTypeValue === "bank2" && (
+                        <>
+                            Display these fields if 'International' is selected
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Bank Name'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
+                                    value={bankName}
+                                    onChangeText={setBankName}
+                                />
+                                {bankName && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setBankName('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='IFSC Code'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
+                                    value={ifscCode}
+                                    onChangeText={setIfscCode}
+                                />
+                                {ifscCode && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setIfscCode('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Name of the Beneficiary'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={nameBeneficiary}
+                                    onChangeText={setNameBeneficiary}
+                                />
+                                {nameBeneficiary && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setNameBeneficiary('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Address of the Beneficiary'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={addressBeneficiary}
+                                    onChangeText={setAddressBeneficiary}
+                                />
+                                {addressBeneficiary && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setAddressBeneficiary('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Account Type'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={accountType}
+                                    onChangeText={setAccountType}
+                                />
+                                {accountType && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setAccountType('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Sender Information'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={senderInformation}
+                                    onChangeText={setSenderInformation}
+                                />
+                                {senderInformation && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setSenderInformation('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </>
+                    )} */}

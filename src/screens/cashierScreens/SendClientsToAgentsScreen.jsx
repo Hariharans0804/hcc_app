@@ -20,7 +20,7 @@ import { replaceLoggerImplementation } from 'react-native-reanimated/lib/typescr
 
 const SendClientsToAgentsScreen = ({ route, navigation }) => {
     const { assignEmployee } = route.params; // Extract passed employee data
-    // console.log('111111', assignEmployee);
+    console.log('111111', assignEmployee.today_rate);
 
     const [loading, setLoading] = useState(true);
     const [isFocus, setIsFocus] = useState(false);
@@ -35,6 +35,15 @@ const SendClientsToAgentsScreen = ({ route, navigation }) => {
 
     // Employee Assign
     const fetchAssignEmployee = async () => {
+
+        if (assignEmployee.today_rate <= 0) {
+            Toast.show({
+                type: 'error',
+                text1: `If you set a today rate, you can't assign it to any agent!`
+            });
+            return; // ✅ Exit early
+        }
+
         try {
             const today = new Date();
             const formattedDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
@@ -135,17 +144,21 @@ const SendClientsToAgentsScreen = ({ route, navigation }) => {
             <View style={styles.clientAssignContainer}>
 
                 <View style={styles.clientAssignDetailContainer}>
-                    <Text style={styles.clientAssignDetailHeading}>Client ID:</Text>
+                    <Text style={styles.clientAssignDetailHeading}>Client ID :</Text>
                     <Text style={styles.clientAssignDetailText}>{assignEmployee.client_id}</Text>
                 </View>
                 <View style={styles.clientAssignDetailContainer}>
-                    <Text style={styles.clientAssignDetailHeading}>Client Name:</Text>
+                    <Text style={styles.clientAssignDetailHeading}>Client Name :</Text>
                     <Text style={styles.clientAssignDetailText}>{assignEmployee.client_name}</Text>
                 </View>
                 <View style={styles.clientAssignDetailContainer}>
-                    <Text style={styles.clientAssignDetailHeading}>Client Number:</Text>
+                    <Text style={styles.clientAssignDetailHeading}>Client Number :</Text>
                     <Text style={styles.clientAssignDetailText}>{assignEmployee.client_contact}</Text>
                 </View>
+                {/* <View style={styles.clientAssignDetailContainer}>
+                    <Text style={styles.clientAssignDetailHeading}>Today Rate :</Text>
+                    <Text style={styles.clientAssignDetailText}>{assignEmployee.today_rate}</Text>
+                </View> */}
                 {/* <View style={styles.clientAssignDetailContainer}>
                     <Text style={styles.clientAssignDetailHeading}>Client City:</Text>
                     <Text style={styles.clientAssignDetailText}>{assignEmployee.client_city}</Text>

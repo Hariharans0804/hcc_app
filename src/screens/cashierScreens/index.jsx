@@ -18,6 +18,8 @@ import UpdateEmployeeScreen from "./UpdateEmployeeScreen";
 import SendClientsToAgentsScreen from "./SendClientsToAgentsScreen";
 import SingleClientPaymentListScreen from "./SingleClientPaymentListScreen";
 import SingleEmployeeClientListScreen from "./SingleEmployeeClientListScreen";
+import PaidAmountEditScreen from "./PaidAmountEditScreen";
+import DistributorHome from "./DistributorHome";
 
 
 export {
@@ -40,5 +42,7 @@ export {
     SingleManagerDetailsScreen,
     SingleEmployeeDetailsScreen,
     SingleClientDetailsScreen,
-    SingleClientPaidCompletedListScreen
+    SingleClientPaidCompletedListScreen,
+    PaidAmountEditScreen,
+    DistributorHome
 }
