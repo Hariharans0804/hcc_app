@@ -361,6 +361,9 @@ const DistributorHome = () => {
 
         const isSelected = longPressSelectedItems.includes(item.user_id);
 
+        const orderDate = item.clients.find((client) => client.date === formattedDate);
+        // console.log('orderDate', orderDate);
+
         return (
             <TouchableOpacity
                 onLongPress={() => toggleLongPressSelection(item.user_id)}
@@ -383,7 +386,10 @@ const DistributorHome = () => {
                     </View>
                     <Text style={[styles.cell, { flex: 2 }]} numberOfLines={1}>{item.username}</Text>
                     <Text style={[styles.cell, { flex: 1.5 }]}>{rateToShow}</Text>
-                    <Text style={[styles.cell, { flex: 1 }]}>{item.clients.length}</Text>
+                    <View>
+                        <Text style={[styles.cell, { flex: 1 }]}>{item.clients?.length || 0}</Text>
+                        <Text style={styles.cityText}>{orderDate ? orderDate.date : 'No Date'}</Text>
+                    </View>
                     {/* <Text style={[styles.cell, { flex: 1 }]}>{item.clients?.length ?? 0}</Text> */}
                     {/* <View style={[styles.buttonContainer, { flex: 1.5 }]}>
                     <TouchableOpacity
@@ -760,5 +766,10 @@ const styles = StyleSheet.create({
         color: Colors.DEFAULT_LIGHT_WHITE,
         textAlign: 'center',
         padding: 10,
-    }
+    }, cityText: {
+        fontFamily: Fonts.POPPINS_MEDIUM,
+        fontSize: 13,
+        lineHeight: 13 * 1.4,
+        color: '#8898A9'
+    },
 })
