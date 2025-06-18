@@ -1,4 +1,4 @@
-import { ActivityIndicator, Alert, FlatList, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { ActivityIndicator, Alert, FlatList, Linking, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import Feather from 'react-native-vector-icons/Feather'
 import AntDesign from 'react-native-vector-icons/AntDesign'
@@ -30,7 +30,7 @@ const SingleEmployeeClientListScreen = ({ route }) => {
   const [isCalendarVisible, setIsCalendarVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [displayDate, setDisplayDate] = useState(moment().format('DD-MM-YYYY')); // Displayed Date
-  // console.log('selectedDate', selectedDate);
+  // console.log('filterDateData', filterDateData);
   const [tempSelectedDate, setTempSelectedDate] = useState(""); // Temporary selection before confirmation
 
 
@@ -38,6 +38,213 @@ const SingleEmployeeClientListScreen = ({ route }) => {
     baseURL: API_HOST,
     timeout: 5000, // Set timeout to 5 seconds
   });
+
+
+  // const sendWhatsAppMessage = () => {
+  //   if (!selectedDate) {
+  //     Alert.alert("No Date Selected", "Please select an date first.");
+  //     return;
+  //   }
+
+  //   if (!employee.phone_number) {
+  //     Alert.alert("Phone Number Not Found", "This agent does not have a registered phone number.");
+  //     return;
+  //   }
+
+  //   let count = 1;
+  //   const whatsappNumber = employee.phone_number.replace(/\D/g, '');
+
+  //   const message =
+  //     `🔹 *Distributor Report*\n\n` +
+  //     `👤 *Distributor Name* : ${employee.username} \n` +
+  //     `📅 *Date* : ${currentDate} \n` +
+  //     `💰 *Today Rate* : ${filterDateData.today_rate} \n\n` +
+  //     `--------------------------\n\n` +
+  //     `🔹TOTAL INR: \n` +
+  //     `🔹TOTAL KD: \n` +
+  //     `🔹*OLD KD: \n` +
+  //     `🔹*KD: `;
+
+  //   const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
+  //   const webFallbackUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+  //   Linking.canOpenURL(whatsappUrl)
+  //     .then(supported => {
+  //       if (supported) {
+  //         Linking.openURL(whatsappUrl);
+  //       } else {
+  //         Linking.openURL(webFallbackUrl);
+  //         Alert.alert("WhatsApp Not Installed", "Please install WhatsApp to send messages.");
+  //       }
+  //     })
+  //     .catch(err => console.error("Error opening WhatsApp:", err));
+
+  // }
+
+  const sendWhatsAppMessage = () => {
+    if (!selectedDate) {
+      Alert.alert("No Date Selected", "Please select a date first.");
+      return;
+    }
+
+    if (!employee.phone_number) {
+      Alert.alert("Phone Number Not Found", "This agent does not have a registered phone number.");
+      return;
+    }
+
+    // ✅ Check if the employee is either Distributor or Collection Agent
+    if (employee.role !== 'Distributor' && employee.role !== 'Collection Agent') {
+      Alert.alert("Access Denied", "Only Distributors and Collection Agents can receive this report.");
+      return;
+    }
+
+    const whatsappNumber = employee.phone_number.replace(/\D/g, '');
+    const formattedDate = moment(selectedDate, "YYYY-MM-DD").format("DD-MM-YYYY");
+
+    // ✅ Build Distributor based on role
+    let totalINR = 0;
+    let oldKD = 0;
+    let todayRate;
+
+    // Get today_rate
+    for (const item of filterDateData) {
+      if (item.today_rate) {
+        todayRate = parseFloat(item.today_rate);
+        break;
+      }
+    }
+
+    if (!todayRate || isNaN(todayRate)) {
+      Alert.alert("Rate Not Found", "Today rate not available for this date.");
+      return;
+    }
+
+    // Build INR breakdown
+    let inrDetails = '';
+
+    filterDateData.forEach((item, index) => {
+      const amount = parseFloat(item.amount) || 0;
+      totalINR += amount;
+
+      inrDetails += `${index + 1}. ${item.client_name || 'Unknown'} : ₹ ${amount.toFixed(2)}\n`;
+
+      //   if (Array.isArray(item.paid_amount_date)) {
+      //     item.paid_amount_date.forEach(paid => {
+      //       oldKD += parseFloat(paid.amount) || 0;
+      //     });
+      //   }
+      // });
+
+      if (Array.isArray(item.paid_amount_date)) {
+        const rate = parseFloat(item.today_rate) || 1; // fallback to 1 to avoid division by zero
+        item.paid_amount_date.forEach(paid => {
+          const paidAmount = parseFloat(paid.amount) || 0;
+          oldKD += paidAmount / rate;
+        });
+      }
+    });
+
+    const totalKD = totalINR / todayRate;
+    const localKD = totalKD;
+    const kdCombined = localKD - oldKD;
+    const finalKD = totalKD - kdCombined;
+
+    // ✅ Build Agent based on role
+    let totalLocal = 0;
+    let clientDetails = "";
+    let count = 1;
+
+    filterDateData.forEach(client => {
+      const paymentsToday = client.paid_amount_date
+        ? client.paid_amount_date.filter(payment => /*payment.date === currentDate &&*/ payment.userID === employee.user_id)
+        : [];
+
+      if (paymentsToday.length > 0) {
+        let clientTotalInternational = 0;
+        let clientTotalLocal = 0;
+
+        paymentsToday.forEach(payment => {
+          const intlAmount = parseFloat(payment.amount) || 0;
+          const localAmount = intlAmount / (client.today_rate > 0 ? client.today_rate : 1);
+
+          clientTotalInternational += intlAmount;
+          clientTotalLocal += localAmount;
+        });
+
+        totalLocal += clientTotalLocal;
+
+        clientDetails += `${count}  | Client Name : ${client.client_name}, \n` +
+          `      Collection Date :  ${formattedDate}, \n` +
+          `      Collection Local Amount : ${(clientTotalLocal).toFixed(3)}\n` +
+          `------------------------------------------------------------\n\n`;
+        count++;
+      }
+    });
+
+    // if (totalLocal === 0) {
+    //   Alert.alert("No Payments", "This agent has not received any payments today.");
+    //   return;
+    // }
+
+
+    // ✅ Build message based on role
+    let message = '';
+
+    if (employee.role === 'Distributor') {
+      message =
+        `🔹 *Distributor Report*\n\n` +
+        `👤 *Distributor Name* : ${employee.username} \n` +
+        `📅 *Date* : ${formattedDate} \n` +
+        `💰 *Today Rate* : ${todayRate.toFixed(2)} \n\n` +
+        `📦 *INR Collection*\n` +
+        `${inrDetails}\n` +
+        `--------------------------\n\n` +
+        `🔹TOTAL INR : ${totalINR.toFixed(2)}\n` +
+        `🔹TOTAL KD : ${totalKD.toFixed(3)}\n` +
+        `🔹OLD KD : ${oldKD.toFixed(3)}\n` +
+        `🔹KD : ${kdCombined.toFixed(3)}`;
+    } else if (employee.role === 'Collection Agent') {
+      message =
+        `🔹 *Agent Report*\n` +
+        `Agent Name : ${employee.username} \n` +
+        `Collection Date : ${formattedDate} \n\n` +
+        clientDetails.trim() +
+        `\n🔹 *TOTAL COLLECTION LOCAL  AMOUNT:* ${(totalLocal).toFixed(3)}`;
+    }
+
+    // const message =
+    //   `🔹 *Distributor Report*\n\n` +
+    //   `👤 *Distributor Name* : ${employee.username} \n` +
+    //   `📅 *Date* : ${formattedDate} \n` +
+    //   `💰 *Today Rate* : ${todayRate.toFixed(2)} \n\n` +
+    //   `📦 *INR Collection*\n` +
+    //   `${inrDetails}\n` +
+    //   `--------------------------\n\n` +
+    //   `🔹TOTAL INR : ${totalINR.toFixed(2)}\n` +
+    //   `🔹TOTAL KD : ${totalKD.toFixed(3)}\n` +
+    //   `🔹OLD KD : ${oldKD.toFixed(3)}\n` +
+    //   `🔹KD : ${kdCombined.toFixed(3)} `;    //(Remaining: KD ${finalKD.toFixed(3)})
+
+
+
+    const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
+    const webFallbackUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    Linking.canOpenURL(whatsappUrl)
+      .then(supported => {
+        if (supported) {
+          Linking.openURL(whatsappUrl);
+        } else {
+          Linking.openURL(webFallbackUrl);
+          Alert.alert("WhatsApp Not Installed", "Please install WhatsApp to send messages.");
+        }
+      })
+      .catch(err => console.error("Error opening WhatsApp:", err));
+  };
+
+
+
+
 
   const currentDate = moment().format('DD-MM-YYYY');
 
@@ -175,6 +382,7 @@ const SingleEmployeeClientListScreen = ({ route }) => {
   useFocusEffect(
     useCallback(() => {
       fetchSingleEmployeeClientsData();
+      setSelectedDate('');
     }, [])
   )
 
@@ -343,7 +551,7 @@ const SingleEmployeeClientListScreen = ({ route }) => {
         <TouchableOpacity
           style={styles.whatsAppButton}
           activeOpacity={0.8}
-        // onPress={sendWhatsAppMessage} // 🔹 Call function here
+          onPress={sendWhatsAppMessage} // 🔹 Call function here
         >
           <Text style={styles.whatsApp}>Send to WhatsApp</Text>
           <MaterialCommunityIcons

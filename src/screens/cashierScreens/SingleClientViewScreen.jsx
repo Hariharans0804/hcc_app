@@ -145,31 +145,35 @@ const SingleClientViewScreen = ({ route, navigation }) => {
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>IFSC Code :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.ifsc_code : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.ifsc_code ? viewSingleClient.ifsc_code : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Bank Name :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.bank_name : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.bank_name ? viewSingleClient?.bank_name : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Name of Beneficiary :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.name_of_the_beneficiary : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.name_of_the_beneficiary ? viewSingleClient.name_of_the_beneficiary : 'No Data'}</Text>
+                    </View>
+                    <View style={styles.clientViewDetailContainer}>
+                        <Text style={styles.clientViewDetailHeading}>Beneficiary Email Id :</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.beneficiary_email_id ? viewSingleClient.beneficiary_email_id.replace(/"/g, "") : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Address of Beneficiary :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.address_of_the_beneficiary : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.address_of_the_beneficiary ? viewSingleClient.address_of_the_beneficiary : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Account Type :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.accoun_type : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accoun_type ? viewSingleClient.accoun_type : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Sender Information :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.sender_information : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.sender_information ? viewSingleClient.sender_information : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Narration :</Text>
-                        <Text style={styles.clientViewDetailText}>{viewSingleClient.accno ? viewSingleClient.narration : 'No Data'}</Text>
+                        <Text style={styles.clientViewDetailText}>{viewSingleClient.narration ? viewSingleClient.narration : 'No Data'}</Text>
                     </View>
                     <View style={styles.clientViewDetailContainer}>
                         <Text style={styles.clientViewDetailHeading}>Bank Type :</Text>

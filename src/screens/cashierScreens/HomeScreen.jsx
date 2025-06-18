@@ -18,6 +18,7 @@ import { API_HOST } from "@env";
 const HomeScreen = ({ navigation }) => {
 
   const [clientsData, setClientsData] = useState([]);
+  // console.log('clientsData', clientsData);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [clientName, setClientName] = useState('');

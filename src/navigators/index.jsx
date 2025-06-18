@@ -878,7 +878,7 @@ const CustomDrawerContent = (props) => {
                         >
                         </DrawerItem>
                         <DrawerItem
-                            label={'Distributor & Agent Clients'}
+                            label={'Distributor & Agent Whatsup'}
                             onPress={() => {
                                 props.navigation.navigate('EmployeeList')
                             }}

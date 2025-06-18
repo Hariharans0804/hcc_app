@@ -262,7 +262,7 @@ const TodayCollectionAmountScreen = () => {
       });
   }, [clientsData, searchText, employeesData, singleAgentFilterData,]);
   // console.log('22222222',todayClientsCollectionAmountList);
-  
+
 
 
   const totalCollectionToday = useMemo(() => {
@@ -337,56 +337,7 @@ const TodayCollectionAmountScreen = () => {
       return whole + 1; // Round up
     }
   };
-
-
-  // const sendWhatsAppMessage = () => {
-  //   if (!singleAgentFilterData) {
-  //     Alert.alert("No Agent Selected", "Please select an agent first.");
-  //     return;
-  //   }
-
-  //   // Find the selected agent in employeesData
-  //   const selectedAgent = employeesData.find(emp => emp.user_id === singleAgentFilterData);
-
-  //   if (!selectedAgent || !selectedAgent.phone_number) {
-  //     Alert.alert("Phone Number Not Found", "This agent does not have a registered phone number.");
-  //     return;
-  //   }
-
-  //   // Get total amount received by this agent today
-  //   const currentDate = moment().format('DD-MM-YYYY');
-  //   const totalReceived = clientsData.reduce((total, client) => {
-  //     const paymentsToday = client.paid_amount_date
-  //       ? client.paid_amount_date.filter(payment => payment.date === currentDate && payment.userID === singleAgentFilterData)
-  //       : [];
-
-  //     return total + paymentsToday.reduce((sum, payment) => sum + (parseFloat(payment.amount) || 0), 0);
-  //   }, 0);
-
-  //   if (totalReceived === 0) {
-  //     Alert.alert("No Payments", "This agent has not received any payments today.");
-  //     return;
-  //   }
-
-  //   // Format WhatsApp message
-  //   const whatsappNumber = selectedAgent.phone_number.replace(/\D/g, ''); // Remove non-numeric characters
-  //   const message = `Hello ${selectedAgent.username},\n\nTotal amount collected today: ${totalReceived.toFixed(2)}`;
-
-  //   // Open WhatsApp with pre-filled message
-  //   const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
-  //   const webFallbackUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-
-  //   Linking.canOpenURL(whatsappUrl)
-  //     .then(supported => {
-  //       if (supported) {
-  //         Linking.openURL(whatsappUrl);
-  //       } else {
-  //         Linking.openURL(webFallbackUrl); // Open in browser as a fallback
-  //         Alert.alert("WhatsApp Not Installed", "Please install WhatsApp to send messages.");
-  //       }
-  //     })
-  //     .catch(err => console.error("Error opening WhatsApp:", err));
-  // };
+  
 
   // const sendWhatsAppMessage = () => {
   //   if (!singleAgentFilterData) {
@@ -406,39 +357,49 @@ const TodayCollectionAmountScreen = () => {
   //   const currentDate = moment().format('DD-MM-YYYY');
 
   //   // Calculate total local and international amounts received by the agent today
-  //   const totalCollectionToday = clientsData.reduce((total, client) => {
-  //     // Filter payments for today
+  //   let totalInternational = 0;
+  //   let totalLocal = 0;
+  //   let clientDetails = "";
+
+  //   clientsData.forEach(client => {
+  //     // Filter payments for today and by selected agent
   //     const paymentsToday = client.paid_amount_date
   //       ? client.paid_amount_date.filter(payment => payment.date === currentDate && payment.userID === singleAgentFilterData)
   //       : [];
 
-  //     // Calculate total international amount
-  //     const totalClientPaymentTodayInternational = paymentsToday.reduce(
-  //       (sum, payment) => sum + (parseFloat(payment.amount) || 0),
-  //       0
-  //     );
+  //     if (paymentsToday.length > 0) {
+  //       let clientTotalInternational = 0;
+  //       let clientTotalLocal = 0;
 
-  //     // Calculate total local amount
-  //     const totalClientPaymentTodayLocal = paymentsToday.reduce((sum, payment) => {
-  //       const rate = client.today_rate && client.today_rate > 0 ? client.today_rate : 1; // Ensure rate is valid
-  //       const amount = parseFloat(payment.amount) || 0;
-  //       return sum + amount / rate; // Convert to local currency
-  //     }, 0);
+  //       paymentsToday.forEach(payment => {
+  //         const internationalAmount = parseFloat(payment.amount) || 0;
+  //         const localAmount = internationalAmount / (client.today_rate > 0 ? client.today_rate : 1);
 
-  //     return {
-  //       localTotalAmount: total.localTotalAmount + totalClientPaymentTodayLocal,
-  //       internationalTotalAmount: total.internationalTotalAmount + totalClientPaymentTodayInternational,
-  //     };
-  //   }, { localTotalAmount: 0, internationalTotalAmount: 0 });
+  //         clientTotalInternational += internationalAmount;
+  //         clientTotalLocal += localAmount;
+  //       });
 
-  //   if (totalCollectionToday.internationalTotalAmount === 0 && totalCollectionToday.localTotalAmount === 0) {
+  //       totalInternational += clientTotalInternational;
+  //       totalLocal += clientTotalLocal;
+
+  //       // Append client details
+  //       clientDetails += `👤 ${client.client_name}\n🌍 Intl: ${roundAmount(clientTotalInternational).toFixed(2)}\n🏡 Local: ${roundAmount(clientTotalLocal).toFixed(3)}\n\n`;
+  //     }
+  //   });
+
+  //   if (totalInternational === 0 && totalLocal === 0) {
   //     Alert.alert("No Payments", "This agent has not received any payments today.");
   //     return;
   //   }
 
   //   // Format WhatsApp message
   //   const whatsappNumber = selectedAgent.phone_number.replace(/\D/g, ''); // Remove non-numeric characters
-  //   const message = `Hello ${selectedAgent.username},\n\nTotal Collection Today:\n🌍 International: ${totalCollectionToday.internationalTotalAmount.toFixed(2)}\n🏡 Local: ${totalCollectionToday.localTotalAmount.toFixed(2)}`;
+
+
+  //   const message = `Hello ${selectedAgent.username},\n\n📅 *Today's Collection Summary*\n\n` +
+  //     `🌍 *Total International:* ${roundAmount(totalInternational).toFixed(2)}\n` +
+  //     `🏡 *Total Local:* ${roundAmount(totalLocal).toFixed(3)}\n\n` +
+  //     `📌 *Client Breakdown:*\n${clientDetails.trim()}`;
 
   //   // Open WhatsApp with pre-filled message
   //   const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
@@ -463,24 +424,22 @@ const TodayCollectionAmountScreen = () => {
       return;
     }
 
-    // Find the selected agent in employeesData
     const selectedAgent = employeesData.find(emp => emp.user_id === singleAgentFilterData);
+    // console.log(selectedAgent);
+
 
     if (!selectedAgent || !selectedAgent.phone_number) {
       Alert.alert("Phone Number Not Found", "This agent does not have a registered phone number.");
       return;
     }
 
-    // Get current date
     const currentDate = moment().format('DD-MM-YYYY');
 
-    // Calculate total local and international amounts received by the agent today
-    let totalInternational = 0;
     let totalLocal = 0;
     let clientDetails = "";
+    let count = 1;
 
     clientsData.forEach(client => {
-      // Filter payments for today and by selected agent
       const paymentsToday = client.paid_amount_date
         ? client.paid_amount_date.filter(payment => payment.date === currentDate && payment.userID === singleAgentFilterData)
         : [];
@@ -490,34 +449,37 @@ const TodayCollectionAmountScreen = () => {
         let clientTotalLocal = 0;
 
         paymentsToday.forEach(payment => {
-          const internationalAmount = parseFloat(payment.amount) || 0;
-          const localAmount = internationalAmount / (client.today_rate > 0 ? client.today_rate : 1);
+          const intlAmount = parseFloat(payment.amount) || 0;
+          const localAmount = intlAmount / (client.today_rate > 0 ? client.today_rate : 1);
 
-          clientTotalInternational += internationalAmount;
+          clientTotalInternational += intlAmount;
           clientTotalLocal += localAmount;
         });
 
-        totalInternational += clientTotalInternational;
         totalLocal += clientTotalLocal;
 
-        // Append client details
-        clientDetails += `👤 ${client.client_name}\n🌍 Intl: ${roundAmount(clientTotalInternational).toFixed(2)}\n🏡 Local: ${roundAmount(clientTotalLocal).toFixed(3)}\n\n`;
+        clientDetails += `${count}  | Client Name : ${client.client_name}, \n` +
+          `      Collection Date :  ${currentDate}, \n` +
+          `      Collection Local Amount : ${(clientTotalLocal).toFixed(3)}\n` +
+          `------------------------------------------------------------\n\n`;
+        count++;
       }
     });
 
-    if (totalInternational === 0 && totalLocal === 0) {
+    if (totalLocal === 0) {
       Alert.alert("No Payments", "This agent has not received any payments today.");
       return;
     }
 
-    // Format WhatsApp message
-    const whatsappNumber = selectedAgent.phone_number.replace(/\D/g, ''); // Remove non-numeric characters
-    const message = `Hello ${selectedAgent.username},\n\n📅 *Today's Collection Summary*\n\n` +
-      `🌍 *Total International:* ${roundAmount(totalInternational).toFixed(2)}\n` +
-      `🏡 *Total Local:* ${roundAmount(totalLocal).toFixed(3)}\n\n` +
-      `📌 *Client Breakdown:*\n${clientDetails.trim()}`;
+    const whatsappNumber = selectedAgent.phone_number.replace(/\D/g, '');
 
-    // Open WhatsApp with pre-filled message
+    const message =
+      `🔹 *Agent Report*\n` +
+      `Agent Name : ${selectedAgent.username} \n` +
+      `Collection Date : ${currentDate} \n\n` +
+      clientDetails.trim() +
+      `\n🔹 *TOTAL COLLECTION LOCAL  AMOUNT:* ${(totalLocal).toFixed(3)}`;
+
     const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}&text=${encodeURIComponent(message)}`;
     const webFallbackUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
@@ -526,12 +488,14 @@ const TodayCollectionAmountScreen = () => {
         if (supported) {
           Linking.openURL(whatsappUrl);
         } else {
-          Linking.openURL(webFallbackUrl); // Open in browser as a fallback
+          Linking.openURL(webFallbackUrl);
           Alert.alert("WhatsApp Not Installed", "Please install WhatsApp to send messages.");
         }
       })
       .catch(err => console.error("Error opening WhatsApp:", err));
   };
+
+
 
 
   const renderItem = ({ item, index }) => {
@@ -571,7 +535,7 @@ const TodayCollectionAmountScreen = () => {
           <Text style={styles.cell} numberOfLines={1}>{(item.client_name || '').replace(/"/g, '')}</Text>
           <Text style={styles.cityText}>{item.client_contact}</Text>
         </View>
-        
+
         <Text style={[styles.cell, { flex: 2 }]} numberOfLines={1}>{agentName}</Text>
 
 

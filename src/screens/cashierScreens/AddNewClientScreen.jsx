@@ -19,6 +19,8 @@ import { Screen } from 'react-native-screens';
 
 const AddNewClientScreen = ({ navigation }) => {
 
+    const [clientsData, setClientsData] = useState([]);
+    // console.log('clientsData', clientsData);
     const [isFocus, setIsFocus] = useState(false);
     const [isFocusDistributor, setIsFocusDistributor] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ const AddNewClientScreen = ({ navigation }) => {
     const [ifscCode, setIfscCode] = useState('');
     const [nameBeneficiary, setNameBeneficiary] = useState('');
     const [addressBeneficiary, setAddressBeneficiary] = useState('');
+    const [beneficiaryEmailId, setBeneficiaryEmailId] = useState('');
     const [accountType, setAccountType] = useState('');
     const [senderInformation, setSenderInformation] = useState('');
     const [narration, setNarration] = useState('');
@@ -69,6 +72,78 @@ const AddNewClientScreen = ({ navigation }) => {
             console.error('Error fetching user data:', error);
         }
     }
+
+
+    // Fetch Client data
+    const fetchClientsData = async () => {
+        try {
+            // Retrieve the token from storage
+            const storedToken = await getFromStorage('token');
+            // console.log('Retrieved token:', storedToken);
+
+            if (!storedToken) {
+                console.error('No token found in storage.');
+                return;
+            }
+
+            const authorization = storedToken; // Use the token as-is or modify if required
+            // console.log('Authorization header:', authorization);
+
+            setLoading(true);
+
+
+            // Axios GET request
+            // const response = await axios.get(`${API_HOST}/acc_list`, {
+            const response = await axiosInstance.get('/acc_list', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authorization, // Include the token in the Authorization header
+                },
+            });
+
+
+            setClientsData(response.data); // Set the filtered data to state
+            //   console.log('Fetched clients:', response.data);
+        } catch (error) {
+            // Handle errors
+            if (error.response) {
+                console.error('API response error:', error.response.data);
+                if (error.response.status === 401) {
+                    console.error('Token might be invalid or expired. Redirecting to login...');
+                    // Redirect to login or request a new token
+                }
+            } else {
+                console.error('Fetch error:', error.message);
+            }
+        } finally {
+            setLoading(false); // Set loading to false once the request is complete
+        }
+    };
+
+
+    const handleAccountNumberChange = (value) => {
+        setAccountNumber(value);
+
+        if (value.length >= 4) { // Optional: wait until user types at least 4 digits
+            const existingClient = clientsData.find(client => client.accno === value);
+            if (existingClient) {
+                setIfscCode(existingClient.ifsc_code || '');
+                setNameBeneficiary(existingClient.name_of_the_beneficiary || '');
+                setBeneficiaryEmailId(existingClient.beneficiary_email_id.replace(/"/g, "") || "");
+            } else {
+                // Clear the fields if no matching account
+                setIfscCode('');
+                setNameBeneficiary('');
+                setBeneficiaryEmailId('');
+            }
+        } else {
+            // Reset if input is too short
+            setIfscCode('');
+            setNameBeneficiary('');
+            setBeneficiaryEmailId('');
+        }
+    };
+
 
 
     // Fetch Employee data
@@ -128,6 +203,7 @@ const AddNewClientScreen = ({ navigation }) => {
         useCallback(() => {
             fetchEmpoyeesData();
             fetchGetLoginUserData();
+            fetchClientsData();
             // const today = new Date();
             // const currentDate = `${today.getDate().toString().padStart(2, '0')}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getFullYear()}`;
             // console.log(currentDate);
@@ -201,6 +277,7 @@ const AddNewClientScreen = ({ navigation }) => {
                     address_of_the_beneficiary: (addressBeneficiary || 'CHENNAI').toUpperCase(),
                     sender_information: (senderInformation || 'STOCK').toUpperCase(),
                     narration: (narration || 'STOCK').toUpperCase(),
+                    email_id_beneficiary: (beneficiaryEmailId || "").replace(/"/g, ""),
                 };
 
                 // const response = await axios.post(`${API_HOST}/acc_insertarrays`,
@@ -234,6 +311,7 @@ const AddNewClientScreen = ({ navigation }) => {
                 setAccountType('');
                 setSenderInformation('');
                 setNarration('');
+                setBeneficiaryEmailId('');
 
                 setShowBankInputs(false);
 
@@ -510,30 +588,10 @@ const AddNewClientScreen = ({ navigation }) => {
                                     selectionColor={Colors.DEFAULT_LIGHT_BLUE}
                                     style={[styles.textInput, { textTransform: 'uppercase' }]}
                                     value={accountNumber}
-                                    onChangeText={setAccountNumber}
+                                    onChangeText={handleAccountNumberChange}
                                 />
                                 {accountNumber && (
                                     <TouchableOpacity activeOpacity={0.8} onPress={() => setAccountNumber('')}>
-                                        <AntDesign
-                                            name="closecircleo"
-                                            size={20}
-                                            color={Colors.DEFAULT_DARK_GRAY}
-                                            style={{ marginLeft: 10 }}
-                                        />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='Bank Name'
-                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                                    style={[styles.textInput, { textTransform: 'uppercase' }]}
-                                    value={bankName}
-                                    onChangeText={setBankName}
-                                />
-                                {bankName && (
-                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setBankName('')}>
                                         <AntDesign
                                             name="closecircleo"
                                             size={20}
@@ -554,6 +612,46 @@ const AddNewClientScreen = ({ navigation }) => {
                                 />
                                 {ifscCode && (
                                     <TouchableOpacity activeOpacity={0.8} onPress={() => setIfscCode('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Name of the Beneficiary'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={styles.textInput}
+                                    value={nameBeneficiary}
+                                    onChangeText={setNameBeneficiary}
+                                />
+                                {nameBeneficiary && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setNameBeneficiary('')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Beneficiary Email ID'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'lowercase' }]}
+                                    value={beneficiaryEmailId}
+                                    onChangeText={setBeneficiaryEmailId}
+                                />
+                                {beneficiaryEmailId && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => setBeneficiaryEmailId('')}>
                                         <AntDesign
                                             name="closecircleo"
                                             size={20}

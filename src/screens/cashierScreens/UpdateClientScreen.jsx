@@ -19,7 +19,7 @@ import { Screen } from 'react-native-screens';
 
 const UpdateClientScreen = ({ route, navigation }) => {
     const { updateSingleClient, distributorName, changeDistributorSingleClient, } = route.params; // Extract passed employee data
-    // console.log('111', updateSingleClient);
+    console.log('111', updateSingleClient);
     // console.log('222', distributorName);
     // console.log('333', changeDistributorSingleClient);
 
@@ -43,7 +43,8 @@ const UpdateClientScreen = ({ route, navigation }) => {
         address_of_the_beneficiary: updateSingleClient.address_of_the_beneficiary || '',
         accoun_type: updateSingleClient.accoun_type || '',
         sender_information: updateSingleClient.sender_information || '',
-        sent: updateSingleClient.sent
+        sent: updateSingleClient.sent,
+        beneficiary_email_id: updateSingleClient.beneficiary_email_id?.replace(/"/g, '') || '',
     });
     // console.log('1111111', clientData);
 
@@ -403,6 +404,29 @@ const UpdateClientScreen = ({ route, navigation }) => {
                                 />
                                 {clientData.name_of_the_beneficiary && (
                                     <TouchableOpacity activeOpacity={0.8} onPress={() => handleInputChange('name_of_the_beneficiary', '')}>
+                                        <AntDesign
+                                            name="closecircleo"
+                                            size={20}
+                                            color={Colors.DEFAULT_DARK_GRAY}
+                                            style={{ marginLeft: 10 }}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </View>
+                        <View style={styles.UpdateTextInputContainer}>
+                            <Text style={styles.updateClientDetailHeading}>Beneficiary Email Id :</Text>
+                            <View style={styles.textInputContainer}>
+                                <TextInput
+                                    placeholder='Beneficiary Email Id'
+                                    placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                    style={[styles.textInput, { textTransform: 'lowercase' }]}
+                                    value={clientData.beneficiary_email_id.replace(/"/g, "")}
+                                    onChangeText={(text) => handleInputChange('beneficiary_email_id', text)}
+                                />
+                                {clientData.beneficiary_email_id && (
+                                    <TouchableOpacity activeOpacity={0.8} onPress={() => handleInputChange('beneficiary_email_id', '')}>
                                         <AntDesign
                                             name="closecircleo"
                                             size={20}

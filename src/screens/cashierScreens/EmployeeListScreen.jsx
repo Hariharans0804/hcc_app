@@ -102,6 +102,8 @@ const EmployeeListScreen = ({ navigation }) => {
       item.email?.toLowerCase().includes(searchText.toLowerCase())
   )
 
+
+
   const renderItem = ({ item, index }) => {
     return (
       <View style={styles.employeesListContainer}>
