@@ -20,6 +20,7 @@ import SearchInput from 'react-native-search-filter';
 const ManagerDashboardScreen = ({ navigation }) => {
 
     const [clientsData, setClientsData] = useState([]);
+    // console.log('clientsData', clientsData);
     const [paidClientsData, setPaidClientsData] = useState([]);
     const [unpaidClientsData, setUnpaidClientsData] = useState([]);
     const [todayCreateClientsData, setTodayCreateClientsData] = useState([]);

@@ -126,7 +126,8 @@ const SingleEmployeeClientListScreen = ({ route }) => {
       const amount = parseFloat(item.amount) || 0;
       totalINR += amount;
 
-      inrDetails += `${index + 1}. ${item.client_name || 'Unknown'} : ₹ ${amount.toFixed(2)}\n`;
+      // inrDetails += `${index + 1}. ${item.client_name || 'Unknown'} : ₹ ${amount.toFixed(2)}\n`;
+      inrDetails += `${index + 1}|    INR : ₹ ${amount.toFixed(2)},\n`;
 
       //   if (Array.isArray(item.paid_amount_date)) {
       //     item.paid_amount_date.forEach(paid => {
@@ -193,16 +194,16 @@ const SingleEmployeeClientListScreen = ({ route }) => {
     if (employee.role === 'Distributor') {
       message =
         `🔹 *Distributor Report*\n\n` +
-        `👤 *Distributor Name* : ${employee.username} \n` +
-        `📅 *Date* : ${formattedDate} \n` +
-        `💰 *Today Rate* : ${todayRate.toFixed(2)} \n\n` +
-        `📦 *INR Collection*\n` +
+        ` *Distributor Name* : ${employee.username} \n` +
+        ` *Date* : ${formattedDate} \n` +
+        ` *Today Rate* : ${todayRate.toFixed(2)} \n\n` +
+        // `📦 *INR Collection*\n` +
         `${inrDetails}\n` +
         `--------------------------\n\n` +
-        `🔹TOTAL INR : ${totalINR.toFixed(2)}\n` +
-        `🔹TOTAL KD : ${totalKD.toFixed(3)}\n` +
-        `🔹OLD KD : ${oldKD.toFixed(3)}\n` +
-        `🔹KD : ${kdCombined.toFixed(3)}`;
+        `🔹 *INR : ${totalINR.toFixed(2)}\n` +
+        `🔹 *KD : ${totalKD.toFixed(3)}\n` +
+        `🔹 *OLD KD : ${oldKD.toFixed(3)}\n` +
+        `🔹 *TOTAL KD : ${kdCombined.toFixed(3)}`;
     } else if (employee.role === 'Collection Agent') {
       message =
         `🔹 *Agent Report*\n` +
@@ -383,6 +384,7 @@ const SingleEmployeeClientListScreen = ({ route }) => {
     useCallback(() => {
       fetchSingleEmployeeClientsData();
       setSelectedDate('');
+      setDisplayDate(moment().format('DD-MM-YYYY'));
     }, [])
   )
 
@@ -603,12 +605,14 @@ const SingleEmployeeClientListScreen = ({ route }) => {
                 onPress={handleConfirmDateSelection}
                 disabled={isCalendarOkButtonDisabled}
               >
-                <Text style={[styles.calendarText,
-                {
-                  color: isCalendarOkButtonDisabled
-                    ? Colors.DEFAULT_DARK_GRAY : Colors.DEFAULT_DARK_BLUE
-                }
-                ]}>OK</Text>
+                <Text
+                  style={[styles.calendarText,
+                  {
+                    color: isCalendarOkButtonDisabled
+                      ? Colors.DEFAULT_DARK_GRAY : Colors.DEFAULT_DARK_BLUE
+                  }
+                  ]}
+                >OK</Text>
               </TouchableOpacity>
             </View>
           </View>

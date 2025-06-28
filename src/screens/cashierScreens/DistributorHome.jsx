@@ -299,6 +299,14 @@ const DistributorHome = () => {
             return; // ✅ Exit early
         }
 
+        // if (selectedClientTotalCount.length === 0) {
+        //     Toast.show({
+        //         type: 'error',
+        //         text1: `This distributor client already assigned!`
+        //     });
+        //     return; // ✅ Exit early
+        // }
+
         // Search all clients from distributorList and check if any selected client has today_rate <= 0
         const allClients = distributorList.flatMap(distributor => distributor.clients);
 
