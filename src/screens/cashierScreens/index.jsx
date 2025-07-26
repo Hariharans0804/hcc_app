@@ -21,6 +21,16 @@ import SingleEmployeeClientListScreen from "./SingleEmployeeClientListScreen";
 import PaidAmountEditScreen from "./PaidAmountEditScreen";
 import DistributorHome from "./DistributorHome";
 
+// =======================================================================================================================//
+// =======================================================================================================================//
+import DistributorCollectionList from "./DistributorCollectionList";
+import DistributorPaidAmountEditList from "./DistributorPaidAmountEditList";
+import DistributorTodayPaidAmountScreen from "./DistributorTodayPaidAmountScreen";
+import SingleEmployeeCollectionPaidListScreen from "./SingleEmployeeCollectionPaidListScreen";
+import DistributorHistory from "./DistributorHistory";
+
+// =======================================================================================================================//
+// =======================================================================================================================//
 
 export {
     SingleEmployeeClientListScreen,
@@ -44,5 +54,15 @@ export {
     SingleClientDetailsScreen,
     SingleClientPaidCompletedListScreen,
     PaidAmountEditScreen,
-    DistributorHome
+    DistributorHome,
+
+    // =======================================================================================================================//
+    // =======================================================================================================================//
+    DistributorCollectionList,
+    DistributorPaidAmountEditList,
+    DistributorTodayPaidAmountScreen,
+    SingleEmployeeCollectionPaidListScreen,
+    DistributorHistory,
+    // =======================================================================================================================//
+    // =======================================================================================================================//
 }

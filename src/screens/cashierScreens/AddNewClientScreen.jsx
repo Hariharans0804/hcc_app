@@ -287,7 +287,29 @@ const AddNewClientScreen = ({ navigation }) => {
                     // body: JSON.stringify(addNewClientData),
                 );
                 setNewClientData(response.data);
-                // console.log('2222222222', response.data);
+                console.log('2222222222', response.data);
+
+                // ==================================================================================================================== //
+                // ==================================================================================================================== //
+                // ✅ Call addamount only if todayRate has a non-zero, non-empty value
+                if (todayRate && parseFloat(todayRate) > 0) {
+                    const addAmountDistributor = {
+                        Distributor_id: parseInt(assignDistributor || 0),
+                        collamount: todayRate ? [(parseInt(clientAmount) / todayRate).toFixed(3)] : "",
+                        colldate: [formattedDate],
+                        type: 'collection',
+                        today_rate: todayRate,
+                        paidamount: "",
+                        distname: "",
+                        agent_id: null,
+                        collection_id: null
+                    };
+
+                    const addDistributorTotalAmount = await axiosInstance.post(`/collection/addamount`, addAmountDistributor);
+                    // console.log('Distributor Amount Added:', addDistributorTotalAmount.data);
+                }
+                // ==================================================================================================================== //
+                // ==================================================================================================================== //
 
                 Toast.show({
                     type: 'success',
@@ -314,6 +336,8 @@ const AddNewClientScreen = ({ navigation }) => {
                 setBeneficiaryEmailId('');
 
                 setShowBankInputs(false);
+
+
 
             } catch (error) {
                 // console.log('00000000000', error.message);
@@ -444,7 +468,7 @@ const AddNewClientScreen = ({ navigation }) => {
                             selectedTextStyle={styles.selectedTextStyle}
                             inputSearchStyle={styles.inputSearchStyle}
                             iconStyle={styles.iconStyle}
-                            containerStyle={{ marginTop: 25, borderRadius: 8 }}
+                            containerStyle={{ marginTop: 30, borderRadius: 8 }}
                             data={distributorList}
                             autoScroll={false}
                             search

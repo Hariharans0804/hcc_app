@@ -24,6 +24,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
     const [paidClientsData, setPaidClientsData] = useState([]);
     const [unpaidClientsData, setUnpaidClientsData] = useState([]);
     const [todayCreateClientsData, setTodayCreateClientsData] = useState([]);
+    // console.log('todayCreateClientsData', todayCreateClientsData);
     const [totals, setTotals] = useState({ overall: 0, paid: 0, unpaid: 0 });
     // const [adminData, setAdminData] = useState([]);
     const [employeesData, setEmployeesData] = useState([]);
@@ -155,6 +156,50 @@ const ManagerDashboardScreen = ({ navigation }) => {
     }, [clientsData]);
 
 
+
+    // ==================================================================================================================== //
+    // ==================================================================================================================== //
+    const fetchTotalDistributorAmount = async () => {
+        try {
+            // Retrieve the token from storage
+            const storedToken = await getFromStorage('token');
+            // console.log('Retrieved token:', storedToken);
+
+            if (!storedToken) {
+                console.error('No token found in storage.');
+                return;
+            }
+
+            const authorization = storedToken; // Use the token as-is or modify if required
+            // console.log('Authorization header:', authorization);
+
+            // Axios GET request
+            // const response = await axios.get(`${API_HOST}/acc_list`, {
+            const response = await axiosInstance.get('/collection/getamount', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authorization, // Include the token in the Authorization header
+                },
+            });
+            // console.log(response.data);
+
+        } catch (error) {
+            // Handle errors
+            if (error.response) {
+                console.error('API response error:', error.response.data);
+                if (error.response.status === 401) {
+                    console.error('Token might be invalid or expired. Redirecting to login...');
+                    // Redirect to login or request a new token
+                }
+            } else {
+                console.error('Fetch error:', error.message);
+            }
+        }
+    }
+    // ==================================================================================================================== //
+    // ==================================================================================================================== //
+
+
     const fetchClientsData = async () => {
         try {
             // Retrieve the token from storage
@@ -223,6 +268,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
                 await fetchGetLoginUserData();
                 fetchClientsData();
                 fetchEmployeesData();
+                fetchTotalDistributorAmount();
             };
             fetchData();
         }, []) //agentData
@@ -387,6 +433,7 @@ const ManagerDashboardScreen = ({ navigation }) => {
             const response = await axiosInstance.put(`/update-distributor-amount/${selectedItem.user_id}`, todayRateSet);
             // const response = await axiosInstance.post(`/update-distributor-amount`, todayRateSet);
             // { headers: { 'Content-Type': 'application/json' } }
+            console.log('Response:', response.data);
 
 
             // Step 2: Find clients without today_rate
@@ -408,9 +455,34 @@ const ManagerDashboardScreen = ({ navigation }) => {
             await Promise.all(updateClientPromises);
             console.log('Updated clients with new today_rate');
 
+            // ==================================================================================================================== //
+            // ==================================================================================================================== //
+            // Step 4: Sum amounts and update distributor collection
+            const totalClientAmount = targetClients.reduce((sum, client) => {
+                const amount = parseFloat(client.amount);
+                return sum + (isNaN(amount) ? 0 : amount);
+            }, 0);
 
+            if (totalClientAmount > 0) {
+                const addAmountDistributor = {
+                    Distributor_id: parseInt(selectedItem.user_id || 0),
+                    collamount: assignTodayRate ? [(parseInt(totalClientAmount) / assignTodayRate).toFixed(3)] : "",
+                    colldate: [currentDate],
+                    type: 'collection',
+                    today_rate: assignTodayRate,
+                    paidamount: "",
+                    distname: "",
+                    agent_id: null,
+                    collection_id: null
+                };
 
-
+                const addDistributorTotalAmount = await axiosInstance.post(`/collection/addamount`, addAmountDistributor);
+                console.log('Distributor amount added:', addDistributorTotalAmount.data);
+            } else {
+                console.warn("No valid client amounts to add to distributor.");
+            }
+            // ==================================================================================================================== //
+            // ==================================================================================================================== //
             Toast.show({
                 type: 'success',
                 text1: 'Today Rate Assign Successfully!',
@@ -422,7 +494,6 @@ const ManagerDashboardScreen = ({ navigation }) => {
 
             fetchEmployeesData();
 
-            console.log('Response:', response.data);
         } catch (error) {
             console.error('Error:', error.response?.data || error.message);
         }

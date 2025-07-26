@@ -340,6 +340,28 @@ const ManagerListScreen = ({ navigation }) => {
                     </TouchableOpacity>
                     <TouchableOpacity
                         activeOpacity={0.8}
+                        onPress={() => handleCategoryClick('Distributor')}
+                        style={[styles.categoryButton,
+                        { backgroundColor: selectedCategory === 'Distributor' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE }
+                        ]}
+                    >
+                        <Text style={[styles.categoryButtonText,
+                        { color: selectedCategory === 'Distributor' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_DARK_GRAY }
+                        ]}>Distributor</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => handleCategoryClick('Agent')}
+                        style={[styles.categoryButton,
+                        { backgroundColor: selectedCategory === 'Agent' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE }
+                        ]}
+                    >
+                        <Text style={[styles.categoryButtonText,
+                        { color: selectedCategory === 'Agent' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_DARK_GRAY }
+                        ]}>Agent</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        activeOpacity={0.8}
                         onPress={() => handleCategoryClick('Admin')}
                         style={[styles.categoryButton,
                         { backgroundColor: selectedCategory === 'Admin' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE }
@@ -359,28 +381,6 @@ const ManagerListScreen = ({ navigation }) => {
                         <Text style={[styles.categoryButtonText,
                         { color: selectedCategory === 'Manager' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_DARK_GRAY }
                         ]}>Manager</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => handleCategoryClick('Agent')}
-                        style={[styles.categoryButton,
-                        { backgroundColor: selectedCategory === 'Agent' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE }
-                        ]}
-                    >
-                        <Text style={[styles.categoryButtonText,
-                        { color: selectedCategory === 'Agent' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_DARK_GRAY }
-                        ]}>Agent</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => handleCategoryClick('Distributor')}
-                        style={[styles.categoryButton,
-                        { backgroundColor: selectedCategory === 'Distributor' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE }
-                        ]}
-                    >
-                        <Text style={[styles.categoryButtonText,
-                        { color: selectedCategory === 'Distributor' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_DARK_GRAY }
-                        ]}>Distributor</Text>
                     </TouchableOpacity>
                 </ScrollView>
             </View>

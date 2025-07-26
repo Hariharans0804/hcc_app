@@ -36,6 +36,11 @@ import {
     SingleEmployeeClientListScreen,
     PaidAmountEditScreen,
     DistributorHome,
+    DistributorCollectionList,
+    DistributorPaidAmountEditList,
+    DistributorTodayPaidAmountScreen,
+    SingleEmployeeCollectionPaidListScreen,
+    DistributorHistory,
 } from '../screens/cashierScreens';
 import {
     CollectionClientListScreen,
@@ -45,6 +50,7 @@ import {
     CollectionPaidAmountEditScreen,
     CollectionPaidCompletedListScreen,
     CollectionTodayAmountScreen,
+    DistributorAgentHome,
 } from '../screens/collectionScreens';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginSuccess, logout } from '../redux/slices/authSlice';
@@ -186,6 +192,20 @@ const Navigators = () => {
                                 component={PaidAmountEditScreen}
                                 options={{ title: 'Paid Amount Edit List', }}
                             />
+                            {/* // ==============================================================================================================// */}
+                            {/* // ==============================================================================================================// */}
+                            <Stack.Screen
+                                name='DistributorPaidAmountEditList'
+                                component={DistributorPaidAmountEditList}
+                                options={{ title: 'Distributor Paid Amount Edit List', }}
+                            />
+                            <Stack.Screen
+                                name='SingleEmployeeCollectionPaidList'
+                                component={SingleEmployeeCollectionPaidListScreen}
+                                options={{ title: 'Single Employee Collection & Paid List', }}
+                            />
+                            {/* // ==============================================================================================================// */}
+                            {/* // ==============================================================================================================// */}
                         </>
                     )}
 
@@ -285,6 +305,25 @@ const CollectionManagerDrawerNavigation = ({ role, }) => {
                 name='DistributorClientHome'
                 component={DistributorHome}
             />
+            {/* // ==============================================================================================================// */}
+            {/* // ==============================================================================================================// */}
+            <Drawer.Screen
+                options={{ title: 'Distributor Collection List', }}
+                name='DistributorCollectionList'
+                component={DistributorCollectionList}
+            />
+            <Drawer.Screen
+                options={{ headerTitle: 'Distributor Today Paid Amount', }}
+                name="DistributorTodayPaidAmount"
+                component={DistributorTodayPaidAmountScreen}
+            />
+            <Drawer.Screen
+                options={{ headerTitle: 'Distributor History', }}
+                name="DistributorHistory"
+                component={DistributorHistory}
+            />
+            {/* // ==============================================================================================================// */}
+            {/* // ==============================================================================================================// */}
         </Drawer.Navigator>
     )
 };
@@ -669,6 +708,15 @@ const CollectionAgentDrawerNavigation = () => {
                 name='CollectionPaidCompletedList'
                 component={CollectionPaidCompletedListScreen}
             />
+            {/* // ==============================================================================================================// */}
+            {/* // ==============================================================================================================// */}
+            <Drawer.Screen
+                options={{ headerTitle: 'Distributor Agent Home', }}
+                name='DistributorAgentHome'
+                component={DistributorAgentHome}
+            />
+            {/* // ==============================================================================================================// */}
+            {/* // ==============================================================================================================// */}
         </Drawer.Navigator>
     )
 };
@@ -797,7 +845,7 @@ const CustomDrawerContent = (props) => {
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
                         </DrawerItem>
-                        <DrawerItem
+                        {/* <DrawerItem
                             label={'Collection List'}
                             onPress={() => {
                                 props.navigation.navigate('CollectionList')
@@ -816,8 +864,28 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
-                        </DrawerItem>
+                        </DrawerItem> */}
                         <DrawerItem
+                            label={'Distributor Collection List'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorCollectionList')
+                            }}
+                            icon={() =>
+                                <MaterialIcons
+                                    name="collections-bookmark"
+                                    size={22}
+                                    color={focused === 'DistributorCollectionList' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorCollectionList'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem>
+                        {/* <DrawerItem
                             label={'Today Collection Amount'}
                             onPress={() => {
                                 props.navigation.navigate('TodayCollectionAmount')
@@ -836,8 +904,28 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
-                        </DrawerItem>
+                        </DrawerItem> */}
                         <DrawerItem
+                            label={'Today Paid Amount'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorTodayPaidAmount')
+                            }}
+                            icon={() =>
+                                <Fontisto
+                                    name="money-symbol"
+                                    size={22}
+                                    color={focused === 'DistributorTodayPaidAmount' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorTodayPaidAmount'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem>
+                        {/* <DrawerItem
                             label={'Paid Completed List'}
                             onPress={() => {
                                 props.navigation.navigate('PaidCompletedList')
@@ -856,7 +944,7 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
-                        </DrawerItem>
+                        </DrawerItem> */}
                         <DrawerItem
                             label={'Employees List'}
                             onPress={() => {
@@ -897,7 +985,7 @@ const CustomDrawerContent = (props) => {
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
                         </DrawerItem>
-                        <DrawerItem
+                        {/* <DrawerItem
                             label={'History'}
                             onPress={() => {
                                 props.navigation.navigate('History')
@@ -916,12 +1004,52 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
+                        </DrawerItem> */}
+                        <DrawerItem
+                            label={'History'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorHistory')
+                            }}
+                            icon={() =>
+                                <FontAwesome
+                                    name="history"
+                                    size={22}
+                                    color={focused === 'DistributorHistory' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorHistory'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
                         </DrawerItem>
                     </>
                 )}
 
                 {loginUserData?.role === 'Collection Agent' && (
                     <>
+                        <DrawerItem
+                            label={'Distributor Agent Home'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorAgentHome')
+                            }}
+                            icon={() =>
+                                <Ionicons
+                                    name="home"
+                                    size={20}
+                                    color={focused === 'DistributorAgentHome' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorAgentHome'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem>
                         <DrawerItem
                             label={'Home'}
                             onPress={() => {

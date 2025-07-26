@@ -21,6 +21,7 @@ const CollectionHomeScreen = ({ route }) => {
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState([]);
   const [agentloginUserData, setAgentLoginUserData] = useState(null);
+  const [distributorNameList, setDistributorNameList] = useState([]);
 
 
   //BackHandler Function
@@ -66,6 +67,113 @@ const CollectionHomeScreen = ({ route }) => {
   });
 
 
+  const distributorNameListShowing = async () => {
+    try {
+      const storedToken = await getFromStorage('token');
+
+      if (!storedToken) {
+        console.error('No token found in storage.');
+        return;
+      }
+
+      const authorization = storedToken;
+      setLoading(true);
+
+      const response = await axiosInstance.get('/collection/getamount', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authorization,
+        },
+      });
+
+      const allDistributorCollections = response.data;
+      // console.log('data', response.data);
+
+      // Filter matches with collectionList
+      const matchedCollections = singleAgentclientsData.map(client => {
+        return allDistributorCollections.find(entry =>
+          String(entry.Distributor_id) === String(client.Distributor_id) &&
+          // String(entry.colldate) === String(client.date) &&
+          String(entry.today_rate) === String(client.today_rate)
+        );
+      }).filter(Boolean); // remove undefined entries
+
+      console.log('Matched collections:', matchedCollections);
+      setDistributorNameList(matchedCollections);
+
+    } catch (error) {
+      if (error.response) {
+        console.error('API response error:', error.response.data);
+        if (error.response.status === 401) {
+          console.error('Token might be invalid or expired. Redirecting to login...');
+        }
+      } else {
+        console.error('Fetch error:', error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Fetch employees data
+  const fetchEmployeesData = async () => {
+    try {
+      // Retrieve the token from storage
+      const storedToken = await getFromStorage('token');
+      // console.log('Retrieved token:', storedToken);
+
+      if (!storedToken) {
+        console.error('No token found in storage.');
+        return;
+      }
+
+      const authorization = storedToken; // Use the token as-is or modify if required
+      // console.log('Authorization header:', authorization);
+
+      // Axios GET request
+      // const response = await axios.get(`${API_HOST}/list`, {
+      const response = await axiosInstance.get('/list', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authorization, // Include the token in the Authorization header
+        },
+      });
+
+      // const distributorList = response.data
+      //   .filter((item) => item.role === "Distributor");
+      // .map((item) => ({
+      //   label: item.username,
+      //   value: item.user_id,
+      // }));
+
+      // const agentList = response.data
+      //   .filter((item) => item.role === "Collection Agent")
+      //   .map((item) => ({
+      //     label: item.username,
+      //     value: item.user_id,
+      //   }));
+
+      // setAgentList(agentList);
+      // setDistributorList(distributorList);
+      // setEmployeesData(response.data);
+      // console.log(response.data);
+      // console.log(agentList.length);
+
+    } catch (error) {
+      // Handle errors
+      if (error.response) {
+        console.error('API response error:', error.response.data);
+        if (error.response.status === 401) {
+          console.error('Token might be invalid or expired. Redirecting to login...');
+          // Redirect to login or request a new token
+        }
+      } else {
+        console.error('Fetch error:', error.message);
+      }
+    }
+  }
+
+
   const fetchGetAgentLoginUserData = async () => {
     try {
       const data = await getFromStorage('users');
@@ -106,8 +214,9 @@ const CollectionHomeScreen = ({ route }) => {
         (item) => /*item.paid_and_unpaid !== 1 &&*/ item.assigned_date === currentDate
       );
 
+      // setSingleAgentClientsData(unpaidClientsList);
       setSingleAgentClientsData(unpaidClientsList);
-      // console.log('00000000000', currentDate);
+      // console.log('00000000000', unpaidClientsList);
 
     } catch (error) {
       console.error('Error fetching clients data:', error.message);
@@ -125,6 +234,8 @@ const CollectionHomeScreen = ({ route }) => {
       const fetchData = async () => {
         await fetchGetAgentLoginUserData();
         fetchClientsData();
+        fetchEmployeesData();
+        distributorNameListShowing();
       };
       fetchData();
 

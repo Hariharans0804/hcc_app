@@ -49,7 +49,7 @@ const LoginScreen = ({ navigation }) => {
       if (data.userFound) {
 
         const { user, token } = data;
-        console.log('8888888', token);
+        // console.log('8888888', token);
 
         const userID = user.user_id;
         const name = user.username;

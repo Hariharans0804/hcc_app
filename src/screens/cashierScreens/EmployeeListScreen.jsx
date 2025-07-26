@@ -115,7 +115,8 @@ const EmployeeListScreen = ({ navigation }) => {
           style={styles.buttonContainer}
           activeOpacity={0.8}
           // onPress={() => navigation.navigate('SingleEmployeeDetails', { employee: item })} // Pass employee details
-          onPress={() => navigation.navigate('SingleEmployeeClientList', { employee: item })}
+          // onPress={() => navigation.navigate('SingleEmployeeClientList', { employee: item })}
+          onPress={() => navigation.navigate('SingleEmployeeCollectionPaidList', { employee: item })}
         >
           <Text style={styles.buttonText}>View More</Text>
           <Feather

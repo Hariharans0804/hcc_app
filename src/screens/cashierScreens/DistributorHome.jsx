@@ -219,6 +219,8 @@ const DistributorHome = () => {
 
             setAgentList(agents);
             setDistributorList(filteredDistributors);
+            // console.log('filteredDistributors',filteredDistributors);
+            
         } catch (error) {
             console.error('Fetch error:', error.message);
         } finally {
@@ -286,6 +288,8 @@ const DistributorHome = () => {
 
         setSelectedClientIds(clientsWithNoUser);
         setSelectedClientTotalCount(clientsWithNoUser.length);
+        // console.log('clientsWithNoUser.length',clientsWithNoUser.length);
+        
     }, [longPressSelectedItems, distributorList]);
 
 
