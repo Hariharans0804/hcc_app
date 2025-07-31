@@ -49,9 +49,22 @@ const SingleClientViewScreen = ({ route, navigation }) => {
 
     const handleDeleteClient = async () => {
         try {
+
+            const clientData = {
+                Distributor_id: parseInt(viewSingleClient.Distributor_id),
+                colldate: viewSingleClient.date,
+                amount: parseFloat(viewSingleClient.amount / viewSingleClient.today_rate).toFixed(3),
+                type: "collection",
+            };
+            // console.log("Prepared clientData:", clientData);
+
+            //Delete Client
             // const response = await axios.delete(`${API_HOST}/acc_delete/${viewSingleClient.client_id}`);
             const response = await axiosInstance.delete(`/acc_delete/${viewSingleClient.client_id}`);
-            console.log('777777', response.data);
+            // console.log('777777', response.data);
+
+            const distributorTableAmountDelete = await axiosInstance.put(`/collection/update`, clientData);
+            // console.log('888888', distributorTableAmountDelete.data);
 
             Toast.show({
                 type: 'error',

@@ -25,13 +25,18 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
     const [loading, setLoading] = useState(true);
     const [isCalendarVisible, setIsCalendarVisible] = useState(false);
     const [selectedDate, setSelectedDate] = useState('');
+    // console.log('selectedDate', moment(selectedDate).format('DD-MM-YYYY'));
     const [displayDate, setDisplayDate] = useState(moment().format('DD-MM-YYYY'));
     const [collectionTotal, setCollectionTotal] = useState([]);
     const [paidTotal, setPaidTotal] = useState([]);
     const [collectionPaidFullData, setCollectionPaidFullData] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(employee?.role === 'Distributor' ? 'collection' : 'paid');
     const [filteredList, setFilteredList] = useState([]);
+    const [distributorList, setDistributorList] = useState([]);
+    const [agentList, setAgentList] = useState([]);
     // console.log('filteredList', filteredList);
+    const [singleDistributorClientsData, setcSingleDistributorClientsData] = useState([]);
+    // console.log('singleDistributorClientsData', singleDistributorClientsData);
 
     const axiosInstance = axios.create({
         baseURL: API_HOST,
@@ -41,9 +46,56 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
 
     const currentDate = moment().format('DD-MM-YYYY');
     // const formattedDate = moment(selectedDate).format('DD-MM-YYYY');
-    // console.log('formattedDate', formattedDate);
+    // console.log('currentDate', currentDate);
 
     const isCalendarOkButtonDisabled = !selectedDate;
+
+
+    const fetchClientsData = async () => {
+        try {
+            // Retrieve the token from storage
+            const storedToken = await getFromStorage('token');
+            // console.log('Retrieved token:', storedToken);
+
+            if (!storedToken) {
+                console.error('No token found in storage.');
+                return;
+            }
+
+            const authorization = storedToken; // Use the token as-is or modify if required
+            // console.log('Authorization header:', authorization);
+
+            setLoading(true);
+
+            // Axios GET request
+            // const response = await axios.get(`${API_HOST}/acc_list`, {
+            const response = await axiosInstance.get('/acc_list', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authorization, // Include the token in the Authorization header
+                },
+            });
+
+            const singleDistributorClientists = response.data
+                .filter(
+                    (item) => item.Distributor_id === employee.user_id
+                );
+            setcSingleDistributorClientsData(singleDistributorClientists);
+        } catch (error) {
+            // Handle errors
+            if (error.response) {
+                console.error('API response error:', error.response.data);
+                if (error.response.status === 401) {
+                    console.error('Token might be invalid or expired. Redirecting to login...');
+                    // Redirect to login or request a new token
+                }
+            } else {
+                console.error('Fetch error:', error.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
 
 
     const sendWhatsAppMessage = () => {
@@ -57,10 +109,141 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
             return;
         }
 
+        // ✅ Check if the employee is either Distributor or Collection Agent
+        if (employee.role !== 'Distributor' && employee.role !== 'Collection Agent') {
+            Alert.alert("Access Denied", "Only Distributors and Collection Agents can receive this report.");
+            return;
+        }
+
         const whatsappNumber = employee.phone_number.replace(/\D/g, '');
         const formattedDate = moment(selectedDate).format('DD-MM-YYYY');
 
-        // const inrDetails
+        // =========================================================================================================//
+        // Distributor whatsup send message details start
+
+        const singleDateDistributorClients = singleDistributorClientsData.filter((item) => item.date === formattedDate)
+        // console.log('singleDateDistributorClients', singleDateDistributorClients);
+
+        // if (singleDateDistributorClients.length === 0) {
+        //     Alert.alert("No Data", "No client data found for the selected date.");
+        //     return;
+        // }
+
+        // if (!todayRate || isNaN(todayRate)) {
+        //     Alert.alert("Rate Not Found", "Today rate not available for this date.");
+        //     return;
+        // }
+
+        // ✅ Build Distributor based on role
+        let totalINR = 0;
+        // let oldKD = 0;
+        let todayRate;
+
+        // Get today_rate
+        for (const item of singleDateDistributorClients) {
+            if (item.today_rate) {
+                todayRate = parseFloat(item.today_rate);
+                break;
+            }
+        }
+
+
+
+        // Build INR breakdown
+        let inrDetails = '';
+
+        singleDateDistributorClients.forEach((item, index) => {
+            const amount = parseFloat(item.amount) || 0;
+            totalINR += amount;
+
+            inrDetails += `${index + 1}|    INR : ₹ ${amount.toFixed(2)},\n`;
+        });
+
+        const distributorId = singleDateDistributorClients[0]?.Distributor_id;
+
+        // if (!distributorId) {
+        //     console.log('Distributor ID not found from data.');
+        //     return;
+        // }
+
+        const isBeforeDate = (date1, date2) => {
+            const d1 = moment(date1, 'DD-MM-YYYY');
+            const d2 = moment(date2, 'DD-MM-YYYY');
+            return d1.isBefore(d2);
+        };
+
+
+        const singleDateDistributorColectionTotal = collectionTotal.filter(
+            (item) =>
+                item.Distributor_id === distributorId &&
+                isBeforeDate(item.colldate, formattedDate)
+        );
+        // console.log('singleDateDistributorColectionTotal', singleDateDistributorColectionTotal);
+
+        const totalCollectionAmount = singleDateDistributorColectionTotal.reduce((sum, item) => {
+            if (Array.isArray(item.collamount) && item.collamount.length > 0) {
+                return sum + parseFloat(item.collamount[0]);
+            }
+            return sum;
+        }, 0);
+         console.log('Total Collection Amount:', totalCollectionAmount.toFixed(3));
+
+        const singleDateDistributorPaidTotal = paidTotal.filter(
+            (item) =>
+                item.Distributor_id === distributorId &&
+                isBeforeDate(item.colldate, formattedDate)
+        );
+        // console.log('singleDateDistributorPaidTotal', singleDateDistributorPaidTotal);
+
+        const totalPaidAmount = singleDateDistributorPaidTotal.reduce((sum, item) => {
+            if (Array.isArray(item.paidamount) && item.paidamount.length > 0) {
+                return sum + parseFloat(item.paidamount[0]);
+            }
+            return sum;
+        }, 0);
+        console.log('Total Paid Amount:', totalPaidAmount.toFixed(3));
+
+        const totalKD = totalINR / todayRate;
+        const oldKD = totalCollectionAmount - totalPaidAmount;
+        const currentKD = totalKD + oldKD;
+
+        // Distributor whatsup send message details end
+        // =========================================================================================================//
+
+
+        // =========================================================================================================//
+        // Agent whatsup send message details start
+        let distributorDetails = '';
+        let count = 1;
+        let totalLocal = 0;
+
+        const singleDateAgentPaidTotal = paidTotal.filter(
+            (item) =>
+                item.agent_id === employee.user_id && item.colldate === formattedDate
+        );
+        // console.log('singleDateAgentPaidTotal', singleDateAgentPaidTotal);
+
+        singleDateAgentPaidTotal.forEach((entry) => {
+            const distributorName = distributorList.find(dis => dis.user_id === entry.Distributor_id)?.username || 'Not Found';
+            const localAmount = parseFloat(entry.paidamount) /*/ (parseFloat(entry.today_rate) || 1)*/;
+
+            distributorDetails += `${count}  | Distributor Name : ${distributorName}, \n` +
+                `      Collection Date :  ${formattedDate}, \n` +
+                `      Collection Local Amount : ${localAmount.toFixed(3)}\n` +
+                `------------------------------------------------------------\n\n`;
+
+            totalLocal += localAmount;
+            count++;
+        });
+
+        // if (totalLocal === 0) {
+        //     Alert.alert("No Payments", "This agent has not received any payments today.");
+        //     return;
+        // }
+
+
+        // Agent whatsup send message details end
+        // =========================================================================================================//
 
         // ✅ Build message based on role
         let message = '';
@@ -77,14 +260,14 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
                 `🔹 *INR : ${totalINR.toFixed(2)}\n` +
                 `🔹 *KD : ${totalKD.toFixed(3)}\n` +
                 `🔹 *OLD KD : ${oldKD.toFixed(3)}\n` +
-                `🔹 *TOTAL KD : ${kdCombined.toFixed(3)}`;
+                `🔹 *TOTAL KD : ${currentKD.toFixed(3)}`;
         } else if (employee.role === 'Collection Agent') {
             message =
                 `🔹 *Agent Report*\n` +
                 `Agent Name : ${employee.username} \n` +
                 `Collection Date : ${formattedDate} \n\n` +
-                clientDetails.trim() +
-                `\n🔹 *TOTAL COLLECTION LOCAL  AMOUNT:* ${(totalLocal).toFixed(3)}`;
+                distributorDetails.trim() +
+                `\n🔹 *TOTAL COLLECTION LOCAL AMOUNT:* ${(totalLocal).toFixed(3)}`;
         }
 
 
@@ -102,6 +285,8 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
             })
             .catch(err => console.error("Error opening WhatsApp:", err));
     }
+
+
 
     const handleClearDates = () => {
         setSelectedDate('');
@@ -139,6 +324,56 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
     };
 
 
+    // Fetch employees data
+    const fetchEmployeesData = async () => {
+        try {
+            // Retrieve the token from storage
+            const storedToken = await getFromStorage('token');
+            // console.log('Retrieved token:', storedToken);
+
+            if (!storedToken) {
+                console.error('No token found in storage.');
+                return;
+            }
+
+            const authorization = storedToken; // Use the token as-is or modify if required
+            // console.log('Authorization header:', authorization);
+
+            setLoading(true);
+            // Axios GET request
+            // const response = await axios.get(`${API_HOST}/list`, {
+            const response = await axiosInstance.get('/list', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': authorization, // Include the token in the Authorization header
+                },
+            });
+
+            const agentList = response.data.filter((item) =>
+                item.role === "Collection Agent"
+            );
+            const distributorList = response.data.filter((item) =>
+                item.role === "Distributor"
+            );
+            setAgentList(agentList);
+            setDistributorList(distributorList);
+            // console.log(response.data);
+            // console.log(agentList, distributorList);
+        } catch (error) {
+            // Handle errors
+            if (error.response) {
+                console.error('API response error:', error.response.data);
+                if (error.response.status === 401) {
+                    console.error('Token might be invalid or expired. Redirecting to login...');
+                    // Redirect to login or request a new token
+                }
+            } else {
+                console.error('Fetch error:', error.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    }
 
     const fetchCollectionPaidList = async () => {
         try {
@@ -189,9 +424,12 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
             const loadData = async () => {
                 // await fetchCollectionDataList();
                 await fetchCollectionPaidList();
-                // await fetchEmployeesData();
+                await fetchEmployeesData();
+                await fetchClientsData();
             };
             loadData();
+            // setDisplayDate(moment().format('DD-MM-YYYY')); // Reset to today
+            // setSelectedDate('');
         }, [])
     );
 
@@ -247,13 +485,23 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
             localValue = interValue / rate;
         }
 
-        const agentDistributorPaidList = filteredList.find((dis) => dis.Distributor_id === item.Distributor_id)
+        let employeeName = '';
+
+        if (employee.role === "Distributor" && item.type === 'collection') {
+            employeeName = distributorList.find((dis) => dis.user_id === item.Distributor_id)?.username || 'Not Found';
+        } else if (employee.role === "Distributor" && item.type === 'paid') {
+            employeeName = agentList.find((age) => age.user_id === item.agent_id)?.username || 'Not Found';
+        } else if (employee.role === "Collection Agent" && item.type === 'paid') {
+            employeeName = distributorList.find((dis) => dis.user_id === item.Distributor_id)?.username || 'Not Found';
+        }
+
+        // console.log('employeeName : ', employeeName);
 
         return (
             <View style={styles.row}>
                 <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>
                 <View style={{ flex: 2 }}>
-                    <Text style={[styles.cell,/*{ flex: 2 }*/]} numberOfLines={1}>{employee.username || 'Not Found'}</Text>
+                    <Text style={[styles.cell,]} numberOfLines={1}>{employeeName || 'Not Found'}</Text>
                     {/* <Text style={[styles.cell, ]} numberOfLines={1}>{employee.user_id === item.agent_id ? (employee.username) : employee.user_id === item.Distributor_id || (employee.username)}</Text> */}
                     <Text style={styles.cityText}>{item.colldate}</Text>
                 </View>
@@ -337,18 +585,24 @@ const SingleEmployeeCollectionPaidListScreen = ({ route }) => {
                                 : Colors.DEFAULT_DARK_RED,        // Red for selected date
                     },
                 ]}>Date : {displayDate}</Text>
-                <TouchableOpacity
-                    style={styles.whatsAppButton}
-                    activeOpacity={0.8}
-                // onPress={sendWhatsAppMessage} // 🔹 Call function here
-                >
-                    <Text style={styles.whatsApp}>Send to WhatsApp</Text>
-                    <MaterialCommunityIcons
-                        name="whatsapp"
-                        size={20}
-                        color={Colors.DEFAULT_WHITE}
-                    />
-                </TouchableOpacity>
+
+                {(
+                    employee?.role === 'Distributor' && filteredList?.[0]?.type === 'collection' ||
+                    employee?.role === 'Collection Agent' && filteredList?.[0]?.type === 'paid'
+                ) && (
+                        <TouchableOpacity
+                            style={styles.whatsAppButton}
+                            activeOpacity={0.8}
+                            onPress={sendWhatsAppMessage} // 🔹 Call function here
+                        >
+                            <Text style={styles.whatsApp}>Send to WhatsApp</Text>
+                            <MaterialCommunityIcons
+                                name="whatsapp"
+                                size={20}
+                                color={Colors.DEFAULT_WHITE}
+                            />
+                        </TouchableOpacity>
+                    )}
             </View>
 
             <View style={[styles.whatsAppButtonContainer, { justifyContent: 'flex-start', gap: 10 }]}>

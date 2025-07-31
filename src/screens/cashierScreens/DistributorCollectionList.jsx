@@ -14,6 +14,7 @@ import SearchInput from "react-native-search-filter";
 import { getFromStorage } from '../../utils/mmkvStorage';
 import { API_HOST } from "@env";
 import { RFValue } from "react-native-responsive-fontsize";
+import moment from 'moment';
 
 const DistributorCollectionList = ({ navigation }) => {
 
@@ -39,12 +40,20 @@ const DistributorCollectionList = ({ navigation }) => {
         timeout: 5000, // Set timeout to 5 seconds
     });
 
+    const currentDate = moment().format('DD-MM-YYYY');
+    //   console.log('currentDate', currentDate);
+    const formattedCurrentDate = moment(currentDate, "DD-MM-YYYY").format("YYYY-MM-DD");
+
+    const hasDataForDate = collectionList.some((item) => {
+        const formattedItemDate = moment(item.assigned_date, "DD-MM-YYYY").format("YYYY-MM-DD");
+        return formattedItemDate === formattedCurrentDate;
+    });
+
 
     const isUpdateButtonDisabled = !(todayPaidAmountValue);
 
 
     const handlePressEnterPaidAmount = async () => {
-
 
         // const localRemainingAmount = kuwaitLocalTotalAmount - kuwaitLocalTotalPaidAmount;
         const localRemainingAmount = selectedItem.collamount - local_Total_Paid_Amount;
@@ -53,6 +62,7 @@ const DistributorCollectionList = ({ navigation }) => {
         const remainingAmount = parseFloat(localRemainingAmount);
 
         if (todayPaidAmountValue > 0) {
+
             if (enteredAmount > remainingAmount) {
                 setErrorMessage('Entered amount exceeds balance amount!');
                 return;
@@ -66,8 +76,10 @@ const DistributorCollectionList = ({ navigation }) => {
 
                 // ✅ Find matching item from collectionList by Distributor_id
                 const matchedCollector = collectionList.find(
-                    (item) => item.Distributor_id === selectedItem.Distributor_id
+                    (item) => item.Distributor_id === selectedItem.Distributor_id && item.assigned_date === currentDate
                 );
+
+                // console.log('matchedCollector', matchedCollector);
 
                 const agent_id = matchedCollector?.user_id || null;
 
@@ -96,6 +108,7 @@ const DistributorCollectionList = ({ navigation }) => {
                 });
 
                 fetchDistributorTotalAmount();
+                setErrorMessage('');
 
             } catch (error) {
                 console.error('Error:', error.response?.data || error.message);
@@ -197,11 +210,11 @@ const DistributorCollectionList = ({ navigation }) => {
 
 
             const paidAmountDetails = response.data.filter((item) => item.type === 'paid');
-            // console.log('data', paidAmountDetails);
+            // console.log('paid data', paidAmountDetails);
             setPaidAmountList(paidAmountDetails);
 
             const allDistributorCollections = response.data;
-            console.log('data', response.data);
+            // console.log('data', response.data);
             setDistributorColection(allDistributorCollections);
 
             // Filter matches with collectionList
@@ -213,8 +226,8 @@ const DistributorCollectionList = ({ navigation }) => {
                 );
             }).filter(Boolean); // remove undefined entries
 
-            // console.log('Matched collections:', matchedCollections);
             setDistributorTotalAmount(matchedCollections);
+            // console.log('Matched collections:', matchedCollections);
 
         } catch (error) {
             if (error.response) {
@@ -374,10 +387,18 @@ const DistributorCollectionList = ({ navigation }) => {
     }
 
     const handlePressPaidAmount = (item) => {
-        console.log('item', item);
+        // console.log('item', item);
         setSelectedItem(item);
         setPaidModalVisible(true);
         setErrorMessage('');
+        // // ✅ Find matching item from collectionList by Distributor_id
+        // const matchedCollector = collectionList.find(
+        //     (i) => i.Distributor_id === item.Distributor_id && i.assigned_date === currentDate
+        // );
+
+        // console.log('matchedCollector', matchedCollector);
+
+        // const agent_id = matchedCollector?.user_id || null;
     }
 
     //  =====================================================================================================\\
@@ -397,8 +418,11 @@ const DistributorCollectionList = ({ navigation }) => {
 
     // Step 1: Find all matching paid records by collection_id
     const matchingPaidRecords = paidAmountList.filter(
-        (entry) => entry.collection_id === selectedItem?.id
+        // (entry) => entry.collection_id === selectedItem?.id
+        (entry) => entry.Distributor_id === selectedItem?.Distributor_id
     );
+    // console.log('matchingPaidRecords', matchingPaidRecords);
+
 
     // Step 2: Calculate total paid amount from all matching records
     // International Total Paid Amount
@@ -485,7 +509,8 @@ const DistributorCollectionList = ({ navigation }) => {
 
         // Step 1: Find all matching paid records by collection_id
         const matchingPaidRecords = paidAmountList.filter(
-            (entry) => entry.collection_id === item?.id
+            // (entry) => entry.collection_id === item?.id
+            (entry) => entry.Distributor_id === item?.Distributor_id
         );
 
         // Step 2: Calculate total paid amount from all matching records
@@ -592,22 +617,26 @@ const DistributorCollectionList = ({ navigation }) => {
             </View>
 
 
-            {loading ? (
-                <ActivityIndicator
-                    size='large'
-                    color={Colors.DEFAULT_DARK_BLUE}
-                    style={{ marginTop: 20, }}
-                />
-            ) : searchUniqueDistributors.length === 0 ? (
-                <Text style={styles.emptyText}>No matching collection list found page!</Text>
+            {collectionList.find((item) => item?.assigned_date === currentDate) ? (
+                loading ? (
+                    <ActivityIndicator
+                        size='large'
+                        color={Colors.DEFAULT_DARK_BLUE}
+                        style={{ marginTop: 20, }}
+                    />
+                ) : searchUniqueDistributors.length === 0 ? (
+                    <Text style={styles.emptyText}>No matching collection list found page!</Text>
+                ) : (
+                    <FlatList
+                        data={searchUniqueDistributors}
+                        keyExtractor={(item, index) =>
+                            `${item.Distributor_id}-${item.colldate}-${item.today_rate}-${index}`
+                        }
+                        renderItem={renderItem}
+                    />
+                )
             ) : (
-                <FlatList
-                    data={searchUniqueDistributors}
-                    keyExtractor={(item, index) =>
-                        `${item.Distributor_id}-${item.colldate}-${item.today_rate}-${index}`
-                    }
-                    renderItem={renderItem}
-                />
+                <Text style={styles.emptyText}>No matching collection list found page!</Text>
             )}
 
             {paidModalVisible && (

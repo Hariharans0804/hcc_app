@@ -17,18 +17,18 @@ import { getFromStorage } from '../../utils/mmkvStorage';
 import { API_HOST } from "@env";
 import moment from 'moment';
 
-const DistributorHistory = () => {
-
-    const [selectedCategory, setSelectedCategory] = useState('collection');
+const DistributorAgentHistory = () => {
     const [loading, setLoading] = useState(true);
-    const [employeesData, setEmployeesData] = useState([]);
+    const [searchText, setSearchText] = useState("");
     const [distributorList, setDistributorList] = useState([]);
-    const [agentList, setAgentList] = useState([]);
     const [historyDataList, setHistoryDataList] = useState([]);
-    const [filteredHistoryDataList, setFilteredHistoryDataList] = useState([]);
     const [isCalendarVisible, setIsCalendarVisible] = useState(false);
+    const [agentloginUserData, setAgentLoginUserData] = useState(null);
+    const [agentloginUserName, setAgentLoginUserName] = useState(null);
+
     const [selectedDate, setSelectedDate] = useState('');
-    const [displayDate, setDisplayDate] = useState(moment().subtract(1, "days").format('DD-MM-YYYY'));
+    // console.log('selectedDate', selectedDate);
+    const [filteredHistoryDataList, setFilteredHistoryDataList] = useState([]);
 
     const currentDate = moment().format('DD-MM-YYYY');
 
@@ -39,8 +39,37 @@ const DistributorHistory = () => {
         timeout: 5000, // Set timeout to 5 seconds
     });
 
+
+    const getYesterdayDate = () => moment().subtract(1, 'days').format('DD-MM-YYYY');
+
+    // const filteredData = historyDataList.filter(item => {
+    //     const colldate = moment(item.colldate, 'DD-MM-YYYY').format('DD-MM-YYYY');
+    //     const targetDate = selectedDate
+    //         ? moment(selectedDate, 'YYYY-MM-DD').format('DD-MM-YYYY') // format from calendar format
+    //         : getYesterdayDate();
+    //     return colldate === targetDate;
+    // });
+    // console.log('filteredData', filteredData);
+
+
+    useEffect(() => {
+        const getYesterdayDate = () => moment().subtract(1, 'days').format('DD-MM-YYYY');
+
+        const targetDate = selectedDate
+            ? moment(selectedDate, 'YYYY-MM-DD').format('DD-MM-YYYY')
+            : getYesterdayDate();
+
+        const filtered = historyDataList.filter(item => {
+            const colldate = moment(item.colldate, 'DD-MM-YYYY').format('DD-MM-YYYY');
+            return colldate === targetDate;
+        });
+
+        setFilteredHistoryDataList(filtered);
+    }, [selectedDate, historyDataList]);
+
     const toggleCalendar = () => {
-        setIsCalendarVisible(!isCalendarVisible);
+        // setIsCalendarVisible(!isCalendarVisible);
+        setIsCalendarVisible(prev => !prev);
     }
 
     const handleCancelCalendar = () => {
@@ -48,35 +77,29 @@ const DistributorHistory = () => {
     }
 
     const handleClearDates = () => {
-        const yesterday = moment().subtract(1, 'days').format('DD-MM-YYYY');
+        // const yesterday = moment().subtract(1, 'days').format('DD-MM-YYYY');
         setSelectedDate('');
-        setDisplayDate(yesterday); // Reset to yesterday's date
-        // const filtered = historyDataList.filter(item => item.type === selectedCategory);
-        // setFilteredHistoryDataList(filtered);
     }
-
 
     const handleConfirmDateSelection = () => {
         if (!selectedDate) return;
-
-        const formattedDate = moment(selectedDate).format('DD-MM-YYYY');
-
-        setDisplayDate(formattedDate);
         setIsCalendarVisible(false);
     };
 
 
-    useEffect(() => {
-        if (historyDataList && selectedCategory && displayDate) {
-            const filtered = historyDataList.filter(
-                item =>
-                    item.type === selectedCategory &&
-                    moment(item.colldate, 'DD-MM-YYYY').format('DD-MM-YYYY') === displayDate
-            );
-            setFilteredHistoryDataList(filtered);
+    const fetchGetAgentLoginUserData = async () => {
+        try {
+            const data = await getFromStorage('users');
+            // console.log('010101', data?.name);
+            const agentLoginUserID = data?.userID;
+            const agentLoginUserName = data?.name;
+            // console.log('101010', agentLoginUserID, agentLoginUserName);
+            setAgentLoginUserData(agentLoginUserID);
+            setAgentLoginUserName(agentLoginUserName);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
         }
-    }, [historyDataList, selectedCategory, displayDate]);
-
+    }
 
     // Fetch employees data
     const fetchEmployeesData = async () => {
@@ -103,18 +126,18 @@ const DistributorHistory = () => {
             });
 
             //  Agent Lidt
-            const collectionAgentList = response.data
-                .filter((item) => item.role === "Collection Agent")
-                .map((item) => ({
-                    label: item.username,
-                    value: item.user_id,
-                }));
+            // const collectionAgentList = response.data
+            //     .filter((item) => item.role === "Collection Agent")
+            //     .map((item) => ({
+            //         label: item.username,
+            //         value: item.user_id,
+            //     }));
 
             // Distributor List
             const collectionDistributorList = response.data.filter((item) => item.role === 'Distributor');
 
-            setEmployeesData(response.data);
-            setAgentList(collectionAgentList);
+            // setEmployeesData(response.data);
+            // setAgentList(collectionAgentList);
             setDistributorList(collectionDistributorList);
             // console.log(collectionDistributorList);
         } catch (error) {
@@ -151,8 +174,13 @@ const DistributorHistory = () => {
                 },
             });
 
+            const paidAmountDetails = response.data.filter(
+                (item) =>
+                    item.type === 'paid' && item.agent_id === agentloginUserData
+            );
+            // console.log('paid', paidAmountDetails);
 
-            setHistoryDataList(response.data);
+            setHistoryDataList(paidAmountDetails);
             // console.log('full data', response.data);
 
         } catch (error) {
@@ -169,47 +197,42 @@ const DistributorHistory = () => {
         }
     }
 
+
     // Combine both fetches with loading states
     useFocusEffect(
         useCallback(() => {
             const fetchData = async () => {
                 setLoading(true);
-                await Promise.all([fetchEmployeesData(), fetchHistoryDataList()]);
+                await Promise.all([fetchEmployeesData(), fetchHistoryDataList(), fetchGetAgentLoginUserData()]);
                 setLoading(false);
             };
             fetchData();
-        }, [])
+            setSearchText('');
+        }, [agentloginUserData])
     )
 
+    const onPressClearTextEntry = () => setSearchText('');
 
-    // useEffect(() => {
-    //     if (historyDataList && selectedCategory) {
-    //         const filtered = historyDataList.filter(item => item.type === selectedCategory);
-    //         setFilteredHistoryDataList(filtered);
-    //     }
-    // }, [historyDataList, selectedCategory]);
 
-    const handleCategoryClick = (category) => {
-        setSelectedCategory(category);
-        const yesterday = moment().subtract(1, 'days').format('DD-MM-YYYY');
-        setDisplayDate(yesterday);
-        setSelectedDate('');
-    };
+    // const yesterdayData = historyDataList.filter(
+    //     (item) =>
+    //         moment(item.colldate, 'DD-MM-YYYY').format('DD-MM-YYYY') === yesterdayDate
+    // );
+    // // console.log('yesterdayData', yesterdayData);
+
+
+    const searchUniqueDistributors = filteredHistoryDataList.filter((item) => {
+        const distributorName = distributorList.find(
+            (dis) => dis.user_id === item.Distributor_id
+        )?.username?.toLowerCase() || '';
+
+        return distributorName.includes(searchText.toLowerCase());
+    });
+
 
     const renderItem = ({ item, index }) => {
 
         const distributorName = distributorList.find((dis) => dis.user_id === item.Distributor_id)?.username || 'Not Found';
-        const agentName = agentList.find((age) => age.value === item.agent_id)?.label || 'Not Found';
-
-        let interValue = 0;
-
-        if (item.type === 'collection' && Array.isArray(item.collamount)) {
-            interValue = parseFloat(item.collamount[0] || 0);
-            // localValue = interValue / rate;
-        } else if (item.type === 'paid' && Array.isArray(item.paidamount)) {
-            interValue = parseFloat(item.paidamount[0] || 0);
-            // localValue = interValue / rate;
-        }
 
         return (
             <View style={styles.row}>
@@ -218,11 +241,9 @@ const DistributorHistory = () => {
                     <Text style={[styles.cell, /*{ flex: 3 }*/]} numberOfLines={1}>{distributorName}</Text>
                     <Text style={styles.cityText} numberOfLines={1}>{item.type}</Text>
                 </View>
-                {selectedCategory === 'paid' && (
-                    <Text style={[styles.cell, { flex: 3 }]} numberOfLines={1}>{agentName}</Text>
-                )}
+                <Text style={[styles.cell, { flex: 3 }]} numberOfLines={1}>{agentloginUserName}</Text>
                 <Text style={[styles.cell, { flex: 3 }]}>
-                    <Text style={{ textTransform: 'uppercase', color: Colors.DEFAULT_DARK_BLUE, }} numberOfLines={1}>local : {interValue.toFixed(3)}</Text>{"\n"}
+                    <Text style={{ textTransform: 'uppercase', color: Colors.DEFAULT_DARK_BLUE, }} numberOfLines={1}>local : {parseFloat(item.paidamount).toFixed(3)}</Text>{"\n"}
                     <Text style={styles.cityText} numberOfLines={1}>{item.colldate}</Text>
                 </Text>
             </View>
@@ -233,61 +254,39 @@ const DistributorHistory = () => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.DEFAULT_DARK_BLUE} translucent />
 
-            <View style={styles.collectionPaidContainer}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => handleCategoryClick('collection')}
-                        style={[
-                            styles.collectionButton,
-                            {
-                                backgroundColor: selectedCategory === 'collection' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE,
-                                borderWidth: selectedCategory !== 'collection' ? 1 : 0,
-                                borderColor: selectedCategory !== 'collection' && Colors.DEFAULT_LIGHT_BLUE,
-                            }
-                        ]}
-                    >
-                        <Text
-                            style={[
-                                styles.collectionButtonText,
-                                { color: selectedCategory === 'collection' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_LIGHT_BLUE }
-                            ]}
-                        >Collection</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        activeOpacity={0.8}
-                        onPress={() => handleCategoryClick('paid')}
-                        style={[
-                            styles.collectionButton,
-                            {
-                                backgroundColor: selectedCategory === 'paid' ? Colors.DEFAULT_LIGHT_BLUE : Colors.DEFAULT_LIGHT_WHITE,
-                                borderWidth: selectedCategory !== 'paid' ? 1 : 0,
-                                borderColor: selectedCategory !== 'paid' && Colors.DEFAULT_LIGHT_BLUE,
-                            }
-                        ]}
-                    >
-                        <Text
-                            style={[
-                                styles.collectionButtonText,
-                                { color: selectedCategory === 'paid' ? Colors.DEFAULT_LIGHT_WHITE : Colors.DEFAULT_LIGHT_BLUE }
-                            ]}
-                        >Paid</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                    <Text style={[styles.dateText,
-                    {
-                        backgroundColor:
-                            displayDate === moment().subtract(1, "days").format("DD-MM-YYYY")
-                                ? Colors.DEFAULT_LIGHT_BLUE  // Blue for today
-                                : Colors.DEFAULT_DARK_RED,        // Red for selected date
-                    }]}>{displayDate}</Text>
-                    <TouchableOpacity style={styles.filterButton} activeOpacity={0.8} onPress={toggleCalendar}>
+            <View style={styles.inputContainer}>
+                <View style={styles.inputSubContainer}>
+                    <Feather
+                        name="search"
+                        size={20}
+                        color={Colors.DEFAULT_BLACK}
+                        style={{ marginRight: 10 }}
+                    />
+                    <SearchInput
+                        onChangeText={(text) => setSearchText(text)}
+                        value={searchText}
+                        placeholder="Search"
+                        selectionColor={Colors.DEFAULT_BLACK}
+                        style={styles.searchInput}
+                    />
+                    {searchText ? (
+                        <TouchableOpacity activeOpacity={0.8} onPress={onPressClearTextEntry}>
+                            <AntDesign
+                                name="closecircleo"
+                                size={20}
+                                color={Colors.DEFAULT_BLACK}
+                            // style={{ marginLeft: 10 }}
+                            />
+                        </TouchableOpacity>
+                    ) : (
+                        <View style={{ width: 20 }} />
+                    )}
+                    <TouchableOpacity activeOpacity={0.8} onPress={toggleCalendar}>
                         <FontAwesome
                             name="sliders"
-                            size={18}
+                            size={20}
                             color={Colors.DEFAULT_BLACK}
-                            style={{ color: Colors.DEFAULT_LIGHT_WHITE }}
+                            style={{ marginLeft: 10 }}
                         />
                     </TouchableOpacity>
                 </View>
@@ -307,9 +306,11 @@ const DistributorHistory = () => {
                             }}
                             onDayPress={day => {
                                 setSelectedDate(day.dateString);
+                                // setTempSelectedDate(day.dateString);
+                                //  setSelectedDate(moment(day.dateString).format('DD-MM-YYYY'));
                             }}
                             markedDates={{
-                                [selectedDate || displayDate]: { selected: true, marked: true, disableTouchEvent: true, selectedColor: Colors.DEFAULT_LIGHT_BLUE, }
+                                [selectedDate]: { selected: true, marked: true, disableTouchEvent: true, selectedColor: Colors.DEFAULT_LIGHT_BLUE, }
                             }}
                         />
 
@@ -349,21 +350,12 @@ const DistributorHistory = () => {
             </Modal>
 
 
-            {selectedCategory === 'collection' && (
-                <View style={styles.collectionHeader}>
-                    <Text style={[styles.heading, { flex: 1 }]}>No</Text>
-                    <Text style={[styles.heading, { flex: 3 }]}>Distributor</Text>
-                    <Text style={[styles.heading, { flex: 3 }]}>Amount</Text>
-                </View>
-            )}
-            {selectedCategory === 'paid' && (
-                <View style={styles.paidHeader}>
-                    <Text style={[styles.heading, { flex: 1 }]}>No</Text>
-                    <Text style={[styles.heading, { flex: 3 }]}>Distributor</Text>
-                    <Text style={[styles.heading, { flex: 3 }]}>Agent</Text>
-                    <Text style={[styles.heading, { flex: 3 }]}>Amount</Text>
-                </View>
-            )}
+            <View style={styles.paidHeader}>
+                <Text style={[styles.heading, { flex: 1 }]}>No</Text>
+                <Text style={[styles.heading, { flex: 3 }]}>Distributor</Text>
+                <Text style={[styles.heading, { flex: 3 }]}>Agent</Text>
+                <Text style={[styles.heading, { flex: 3 }]}>Amount</Text>
+            </View>
 
             {loading ? (
                 <ActivityIndicator
@@ -371,79 +363,60 @@ const DistributorHistory = () => {
                     color={Colors.DEFAULT_DARK_BLUE}
                     style={{ marginTop: 20, }}
                 />
-            ) : filteredHistoryDataList.length > 0 ? (
+            ) : searchUniqueDistributors.length > 0 ? (
                 <FlatList
-                    data={filteredHistoryDataList}
+                    data={searchUniqueDistributors}
                     keyExtractor={(item) => item.id?.toString()}
                     renderItem={renderItem}
                     contentContainerStyle={styles.flatListContainer}
                 />
             ) : (
-                <Text style={styles.emptyText}>No one paid yesterday!</Text>
+                <Text style={styles.emptyText}>{selectedDate ? `No data found for ${moment(selectedDate, 'YYYY-MM-DD').format('DD-MM-YYYY')}` : 'No one paid yesterday!'}</Text>
             )}
+
 
         </View>
     )
 }
 
-export default DistributorHistory
+export default DistributorAgentHistory
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.DEFAULT_WHITE,
     },
-    collectionPaidContainer: {
-        // borderWidth: 1,
+    inputContainer: {
+        backgroundColor: Colors.DEFAULT_LIGHT_WHITE,
+        paddingHorizontal: 10,
         marginHorizontal: 15,
-        marginVertical: 10,
-        // marginTop: 10,
+        borderRadius: 50,
+        borderWidth: 0.5,
+        borderColor: Colors.DEFAULT_BLACK,
+        elevation: 1,
+        borderColor: Colors.DEFAULT_LIGHT_WHITE,
+        justifyContent: 'center',
+        marginTop: 10,
+        width: Display.setWidth(92),
+        borderWidth: 1
+    },
+    inputSubContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
     },
-    collectionButton: {
-        // backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
-        borderRadius: 8,
-        // padding: 10,
-    },
-    collectionButtonText: {
-        fontSize: 12,
-        lineHeight: 12 * 1.4,
-        // color: Colors.DEFAULT_WHITE,
+    searchInput: {
+        fontSize: 15,
+        lineHeight: 15 * 1.4,
+        letterSpacing: 1,
+        textAlignVertical: 'center',
+        paddingVertical: 0,
+        height: Display.setHeight(6),
+        color: Colors.DEFAULT_BLACK,
         fontFamily: Fonts.POPPINS_SEMI_BOLD,
-        paddingVertical: 10,
-        paddingHorizontal: 15
-    },
-    filterButton: {
-        backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        paddingVertical: 10
-    },
-    dateText: {
-        fontSize: 12,
-        lineHeight: 12 * 1.4,
-        color: Colors.DEFAULT_WHITE,
-        fontFamily: Fonts.POPPINS_SEMI_BOLD,
-        backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
-        // padding: 10,
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-    },
-    collectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 10,
-        borderWidth: 1,
-        marginHorizontal: 10,
-        // marginTop: 20,
-        marginBottom: 10,
-        borderColor: Colors.DEFAULT_LIGHT_BLUE,
-        backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
-        borderRadius: 8
+        paddingTop: 5,
+        width: Display.setWidth(65),
+        paddingRight: 15,
+        // borderWidth: 1
     },
     paidHeader: {
         flexDirection: 'row',
@@ -452,7 +425,7 @@ const styles = StyleSheet.create({
         padding: 10,
         borderWidth: 1,
         marginHorizontal: 10,
-        // marginTop: 20,
+        marginTop: 10,
         marginBottom: 10,
         borderColor: Colors.DEFAULT_LIGHT_BLUE,
         backgroundColor: Colors.DEFAULT_LIGHT_BLUE,
@@ -469,6 +442,14 @@ const styles = StyleSheet.create({
     flatListContainer: {
         paddingBottom: 50,
         // borderWidth:1
+    },
+    emptyText: {
+        fontSize: 18,
+        lineHeight: 18 * 1.4,
+        textAlign: 'center',
+        fontFamily: Fonts.POPPINS_SEMI_BOLD,
+        marginVertical: 10,
+        color: Colors.DEFAULT_DARK_RED
     },
     row: {
         flexDirection: 'row',
@@ -495,14 +476,6 @@ const styles = StyleSheet.create({
         fontSize: 12,
         lineHeight: 12 * 1.4,
         color: '#8898A9'
-    },
-    emptyText: {
-        fontSize: 18,
-        lineHeight: 18 * 1.4,
-        textAlign: 'center',
-        fontFamily: Fonts.POPPINS_SEMI_BOLD,
-        marginVertical: 10,
-        color: Colors.DEFAULT_DARK_RED
     },
     modalOverlay: {
         flex: 1,

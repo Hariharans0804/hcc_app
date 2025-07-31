@@ -176,7 +176,7 @@ const DistributorTodayPaidAmountScreen = () => {
             setEmployeesData(response.data);
             setAgentList(collectionAgentList);
             setDistributorList(collectionDistributorList);
-            // console.log(collectionDistributorList);
+            // console.log('collectionAgentList', collectionAgentList);
         } catch (error) {
             // Handle errors
             if (error.response) {
@@ -252,7 +252,7 @@ const DistributorTodayPaidAmountScreen = () => {
     const renderItem = ({ item, index }) => {
 
         const distributorName = distributorList.find((dis) => dis.user_id === item.Distributor_id)?.username || 'Not Found';
-        const agentName = agentList.find((age) => age.value === item.agent_id)?.label || 'Not Found';
+        const agentName = agentList.find((age) => String(age.value) === String(item.agent_id))?.label || 'Not Found';
 
         const kuwaitLocalAmountValue = parseFloat(item.paidamount) / item.today_rate;
 
@@ -261,8 +261,10 @@ const DistributorTodayPaidAmountScreen = () => {
                 <Text style={[styles.cell, { flex: 1 }]}>{index + 1}</Text>
 
                 {/* <View style={{ alignItems: 'center', flex: 3 }}> */}
-                <Text style={[styles.cell, { flex: 3 }]} numberOfLines={1}>{distributorName}</Text>
-                {/* <Text style={styles.cityText}>{item.client_contact}</Text> */}
+                <View style={{ flex: 3, alignItems: 'center' }}>
+                    <Text style={[styles.cell, /*{ flex: 3 }*/]} numberOfLines={1}>{distributorName}</Text>
+                    <Text style={styles.cityText}>{item.colldate}</Text>
+                </View>
                 {/* </View> */}
 
                 <Text style={[styles.cell, { flex: 3 }]} numberOfLines={1}>{agentName}</Text>
@@ -589,4 +591,10 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         textTransform: 'uppercase'
     },
+    cityText: {
+        fontFamily: Fonts.POPPINS_MEDIUM,
+        fontSize: 11,
+        lineHeight: 11 * 1.4,
+        color: '#8898A9'
+    }
 })

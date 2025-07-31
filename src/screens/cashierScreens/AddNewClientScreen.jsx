@@ -399,6 +399,9 @@ const AddNewClientScreen = ({ navigation }) => {
         }
     };
 
+
+
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor={Colors.DEFAULT_DARK_BLUE} translucent />
@@ -497,27 +500,29 @@ const AddNewClientScreen = ({ navigation }) => {
                         />
                     </View>
 
-                    <View style={styles.textInputContainer}>
-                        <TextInput
-                            placeholder='Today Rate'
-                            keyboardType='numeric'
-                            placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
-                            selectionColor={Colors.DEFAULT_LIGHT_BLUE}
-                            style={styles.textInput}
-                            value={todayRate}
-                            onChangeText={setTodayRate}
-                        />
-                        {todayRate && (
-                            <TouchableOpacity activeOpacity={0.8} onPress={() => setTodayRate('')}>
-                                <AntDesign
-                                    name="closecircleo"
-                                    size={20}
-                                    color={Colors.DEFAULT_DARK_GRAY}
-                                    style={{ marginLeft: 10 }}
-                                />
-                            </TouchableOpacity>
-                        )}
-                    </View>
+                    {todayRate !== '' && (
+                        <View style={styles.textInputContainer}>
+                            <TextInput
+                                placeholder='Today Rate'
+                                keyboardType='numeric'
+                                placeholderTextColor={Colors.DEFAULT_LIGHT_BLUE}
+                                selectionColor={Colors.DEFAULT_LIGHT_BLUE}
+                                style={styles.textInput}
+                                value={todayRate}
+                                onChangeText={setTodayRate}
+                            />
+                            {todayRate && (
+                                <TouchableOpacity activeOpacity={0.8} onPress={() => setTodayRate('')}>
+                                    <AntDesign
+                                        name="closecircleo"
+                                        size={20}
+                                        color={Colors.DEFAULT_DARK_GRAY}
+                                        style={{ marginLeft: 10 }}
+                                    />
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    )}
 
                     <View style={styles.textInputContainer}>
                         <TextInput

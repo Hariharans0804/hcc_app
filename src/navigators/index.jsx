@@ -50,7 +50,10 @@ import {
     CollectionPaidAmountEditScreen,
     CollectionPaidCompletedListScreen,
     CollectionTodayAmountScreen,
+    DistributorAgentHistory,
     DistributorAgentHome,
+    DistributorAgentPaidEditList,
+    DistributorAgentTodayPaidAmountList,
 } from '../screens/collectionScreens';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginSuccess, logout } from '../redux/slices/authSlice';
@@ -222,6 +225,15 @@ const Navigators = () => {
                                 component={CollectionPaidAmountEditScreen}
                                 options={{ title: 'Paid Amount Edit List', }}
                             />
+                            {/* // ==============================================================================================================// */}
+                            {/* // ==============================================================================================================// */}
+                            <Stack.Screen
+                                name='DistributorAgentPaidEditList'
+                                component={DistributorAgentPaidEditList}
+                                options={{ title: 'Agent Paid Amount Edit List', }}
+                            />
+                            {/* // ==============================================================================================================// */}
+                            {/* // ==============================================================================================================// */}
                         </>
                     )}
                 </Stack.Navigator>
@@ -680,7 +692,8 @@ const CollectionAgentDrawerNavigation = () => {
                     width: 320,
                 },
             })}
-            initialRouteName="CollectionHome"
+            // initialRouteName="CollectionHome"
+            initialRouteName="DistributorAgentHome"
             drawerContent={(props) => <CustomDrawerContent {...props} />}
         >
             <Drawer.Screen
@@ -714,6 +727,16 @@ const CollectionAgentDrawerNavigation = () => {
                 options={{ headerTitle: 'Distributor Agent Home', }}
                 name='DistributorAgentHome'
                 component={DistributorAgentHome}
+            />
+            <Drawer.Screen
+                options={{ headerTitle: 'Today Paid Amount', }}
+                name='DistributorAgentTodayPaidAmountList'
+                component={DistributorAgentTodayPaidAmountList}
+            />
+            <Drawer.Screen
+                options={{ headerTitle: 'Distributor Agent History', }}
+                name='DistributorAgentHistory'
+                component={DistributorAgentHistory}
             />
             {/* // ==============================================================================================================// */}
             {/* // ==============================================================================================================// */}
@@ -1050,7 +1073,7 @@ const CustomDrawerContent = (props) => {
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
                         </DrawerItem>
-                        <DrawerItem
+                        {/* <DrawerItem
                             label={'Home'}
                             onPress={() => {
                                 props.navigation.navigate('CollectionHome')
@@ -1069,8 +1092,8 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
-                        </DrawerItem>
-                        <DrawerItem
+                        </DrawerItem> */}
+                        {/* <DrawerItem
                             label={'Collection List'}
                             onPress={() => {
                                 props.navigation.navigate('CollectionClientList')
@@ -1089,8 +1112,8 @@ const CustomDrawerContent = (props) => {
                             inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
-                        </DrawerItem>
-                        <DrawerItem
+                        </DrawerItem> */}
+                        {/* <DrawerItem
                             label={'Today Collection Amount'}
                             onPress={() => {
                                 props.navigation.navigate('CollectionTodayAmount')
@@ -1103,6 +1126,26 @@ const CustomDrawerContent = (props) => {
                                 />
                             }
                             focused={focused === 'CollectionTodayAmount'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem> */}
+                        <DrawerItem
+                            label={'Today Paid Amount'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorAgentTodayPaidAmountList')
+                            }}
+                            icon={() =>
+                                <Fontisto
+                                    name="money-symbol"
+                                    size={20}
+                                    color={focused === 'DistributorAgentTodayPaidAmountList' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorAgentTodayPaidAmountList'}
                             activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
                             // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
                             activeTintColor={Colors.DEFAULT_WHITE}
@@ -1130,7 +1173,7 @@ const CustomDrawerContent = (props) => {
                             labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
                         >
                         </DrawerItem> */}
-                        <DrawerItem
+                        {/* <DrawerItem
                             label={'History'}
                             onPress={() => {
                                 props.navigation.navigate('CollectionHistory')
@@ -1143,6 +1186,26 @@ const CustomDrawerContent = (props) => {
                                 />
                             }
                             focused={focused === 'CollectionHistory'}
+                            activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
+                            // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
+                            activeTintColor={Colors.DEFAULT_WHITE}
+                            inactiveTintColor={Colors.DEFAULT_DARK_BLUE}
+                            labelStyle={{ fontSize: 15, marginLeft: 10, fontFamily: Fonts.POPPINS_SEMI_BOLD, }}
+                        >
+                        </DrawerItem> */}
+                        <DrawerItem
+                            label={'Distributor Agent History'}
+                            onPress={() => {
+                                props.navigation.navigate('DistributorAgentHistory')
+                            }}
+                            icon={() =>
+                                <FontAwesome
+                                    name="history"
+                                    size={20}
+                                    color={focused === 'DistributorAgentHistory' ? Colors.DEFAULT_WHITE : Colors.DEFAULT_DARK_BLUE}
+                                />
+                            }
+                            focused={focused === 'DistributorAgentHistory'}
                             activeBackgroundColor={Colors.DEFAULT_LIGHT_BLUE}
                             // inactiveBackgroundColor={Colors.DEFAULT_LIGHT_GRAY}
                             activeTintColor={Colors.DEFAULT_WHITE}

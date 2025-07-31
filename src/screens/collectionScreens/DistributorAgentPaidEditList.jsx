@@ -7,7 +7,9 @@ import { API_HOST } from "@env";
 import { Colors, Fonts } from '../../constants';
 import Toast from 'react-native-toast-message';
 
-const DistributorPaidAmountEditList = ({ route, navigation }) => {
+
+const DistributorAgentPaidEditList = ({ route, navigation }) => {
+
     const { editClient } = route.params; // Extract passed edit client data
     // console.log('editClient', editClient);
 
@@ -203,7 +205,7 @@ const DistributorPaidAmountEditList = ({ route, navigation }) => {
     )
 }
 
-export default DistributorPaidAmountEditList
+export default DistributorAgentPaidEditList
 
 const styles = StyleSheet.create({
     container: {
